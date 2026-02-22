@@ -31,7 +31,9 @@
 
     // Recommended Options
     "strict": true,
-    "jsx": "react-jsx",
+    "jsx": "react",
+    "jsxFactory": "h",
+    "jsxFragmentFactory": "Fragment",
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,

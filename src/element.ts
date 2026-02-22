@@ -1,11 +1,32 @@
+let _elementCounter = 0;
+
 export class Element {
     private tagName: string;
     private attributes: Map<string, string> = new Map();
     private children: Element[] = [];
     private textContent: string | null = null;
 
+    /** Stable, unique CSS class name used to wire up event handlers at compile time. */
+    private readonly uniqueClassName: string;
+
+    /** Optional click handler serialised into the compiled <script> block. */
+    private onClickHandler: (() => void) | null = null;
+
     constructor(tagName: string) {
         this.tagName = tagName;
+        this.uniqueClassName = `sc-el-${++_elementCounter}`;
+    }
+
+    public getUniqueClassName(): string {
+        return this.uniqueClassName;
+    }
+
+    public setOnClick(callback: () => void): void {
+        this.onClickHandler = callback;
+    }
+
+    public getOnClickHandler(): (() => void) | null {
+        return this.onClickHandler;
     }
 
     public addChild(child: Element): void {
@@ -26,11 +47,21 @@ export class Element {
 
     /**
      * Serializes this Element and its children into an HTML string.
+     * The element's unique class name is always included in the class attribute
+     * so the compiler can attach event listeners by selector.
      */
     public toHtmlString(indent: number = 0): string {
         const pad = "  ".repeat(indent);
 
-        const attrs = Array.from(this.attributes.entries())
+        // Merge the unique class name with any user-supplied class attribute.
+        const existingClass = this.attributes.get("class");
+        const classValue = existingClass
+            ? `${this.uniqueClassName} ${existingClass}`
+            : this.uniqueClassName;
+        const mergedAttrs = new Map(this.attributes);
+        mergedAttrs.set("class", classValue);
+
+        const attrs = Array.from(mergedAttrs.entries())
             .map(([k, v]) => ` ${k}="${escapeAttr(v)}"`)
             .join("");
         const openTag = `<${this.tagName}${attrs}>`;
