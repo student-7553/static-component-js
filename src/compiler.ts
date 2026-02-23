@@ -1,22 +1,31 @@
 import * as fs from "fs";
 import * as path from "path";
-// import { Component } from "./component.js";
+import { Component } from "./component.js";
 import { Element } from "./element.js";
+import { toHtmlString } from "./html-compiler.js";
+import { compileToDomCommands } from "./dom-compiler.js";
 
 
 /**
- * Compiles a raw Element tree into a full HTML file and writes it to disk.
- * Equivalent to compileToHtml() but accepts an Element directly instead of a
- * Component — useful when compiling JSX functional components that return an
- * Element without a surrounding Component.
+ * Compiles a Component into a full HTML file and writes it to disk.
  *
- * @param element   - The root Element to compile.
+ * @param component - The root Component to compile.
  * @param filePath  - Destination file path (e.g. "./output/index.html").
  */
-export function compileElementToHtml(element: Element, filePath: string): void {
-  const bodyContent = element.toHtmlString(2);
-  const clickHandlers = collectClickHandlers(element);
-  const scriptBlock = buildOnLoadScript([], clickHandlers);
+export function compileComponentToHtml(component: Component, filePath: string): void {
+  const rootElement = component.getRoot();
+  const bodyContent = toHtmlString(rootElement, 2);
+  const clickHandlers = collectClickHandlers(rootElement);
+  const scriptBlock = buildOnLoadScript(component.getOnLoadHooks(), clickHandlers);
+
+  const domCommands = compileToDomCommands(rootElement);
+  const idVar = component.uniqueId ? `'${component.uniqueId}'` : `'default'`;
+  const domScriptBlock = `  <script>
+    window.Components = window.Components || {};
+    window.Components[${idVar}] = function() {
+${domCommands.split("\n").map(l => "      " + l).join("\n")}
+    };
+  </script>`;
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -27,7 +36,8 @@ export function compileElementToHtml(element: Element, filePath: string): void {
   </head>
   <body>
 ${bodyContent}
-${scriptBlock}  </body>
+${scriptBlock}
+${domScriptBlock}  </body>
 </html>
 `;
 

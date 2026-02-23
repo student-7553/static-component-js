@@ -1,4 +1,5 @@
 import { h, Fragment } from "../jsx-runtime.js";
+import { getValue } from "./helper.js";
 
 /**
  * Example JSX component demonstrating the JSX feature set:
@@ -23,21 +24,34 @@ function Card({ title, body }: CardProps) {
   );
 }
 
-
+// just call it from the client
 export default function App() {
+
+  let isEnabled = getValue("tempo");
+
   return (
-    <div class="app">
+    <div id="tempoooooo" class="app">
       <h1>Hello from JSX Test!</h1>
       <p>This page was authored in JSX and compiled to static HTML.</p>
 
+      {isEnabled && (
+        <Card
+          title="What is this?"
+          body="A zero-dependency JSX compiler built on top of Element + Component."
+        />
+      )}
+
       <Card
-        title="What is this?"
+        title="What is this 2?"
         body="A zero-dependency JSX compiler built on top of Element + Component."
       />
 
-      <button onClick={() => {
-        console.log("Button clicked!");
-      }}>Click me</button>
-    </div>
+      <button onClick={
+        () => {
+          (window as any).tempo = false;
+        }
+      }
+      >Click me</button>
+    </div >
   );
 }

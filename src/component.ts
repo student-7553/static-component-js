@@ -1,11 +1,13 @@
 import { Element } from "./element.js";
 
-export abstract class Component {
-    protected rootElement: Element | null = null;
+export class Component {
+    protected rootElement: Element;
+    public uniqueId: string;
     private onLoadHooks: Array<() => void> = [];
 
-    constructor() {
-        this.rootElement = this.render();
+    constructor(rootElement: Element, uniqueId: string) {
+        this.rootElement = rootElement;
+        this.uniqueId = uniqueId;
     }
 
     /**
@@ -21,11 +23,6 @@ export abstract class Component {
     public getOnLoadHooks(): Array<() => void> {
         return this.onLoadHooks;
     }
-
-    /**
-     * The render method should return an Element tree that represents the component's UI.
-     */
-    public abstract render(): Element;
 
     public getRoot(): Element {
         if (!this.rootElement) {

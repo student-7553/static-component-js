@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
-import { compileElementToHtml } from "./compiler.js";
+import { compileComponentToHtml } from "./compiler.js";
+import { Component } from "./component.js";
 import { Element } from "./element.js";
 
 /**
@@ -60,9 +61,12 @@ if (!(rootElement instanceof Element)) {
     process.exit(1);
 }
 
+const uniqueId = path.basename(sourceArg, path.extname(sourceArg));
+const component = new Component(rootElement, uniqueId);
+
 // ── Produce HTML ─────────────────────────────────────────────────────────────
 const htmlOutPath = path.join(projectRoot, "output", "index.html");
-compileElementToHtml(rootElement, htmlOutPath);
+compileComponentToHtml(component, htmlOutPath);
 
 // ── Copy JS bundle ────────────────────────────────────────────────────────────
 const jsOutPath = path.join(projectRoot, "output", "app.js");
