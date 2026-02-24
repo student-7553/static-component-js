@@ -1,6 +1,6 @@
 # static-component-js
 
-**static-component-js** is a high-performance, JSX-based frontend framework designed for static-oriented websites that require interactivity. It is a lightweight alternative to React that eliminates runtime overhead by compiling JSX components directly into static HTML and imperative DOM commands.
+**static-component-js** is a high-performance, JSX-based frontend framework designed for static-oriented websites that require  interactivity. It is a lightweight alternative to React that eliminates runtime overhead by compiling JSX components directly into static HTML and imperative DOM commands.
 
 ## Why static-component-js?
 

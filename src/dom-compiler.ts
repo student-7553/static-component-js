@@ -28,14 +28,18 @@ export function compileToDomCommands(element: Element, varPrefix: string = "el")
         commands.push(`${currentVar}.className = ${JSON.stringify(finalClass)};`);
 
         for (const [name, value] of attributes.entries()) {
-            if (name === "class") continue;
-            commands.push(`${currentVar}.setAttribute(${JSON.stringify(name)}, ${JSON.stringify(value)});`);
+            if (name === "class") {
+                continue;
+            };
+            const val = value.startsWith("$") ? value.substring(1) : JSON.stringify(value);
+            commands.push(`${currentVar}.setAttribute(${JSON.stringify(name)}, ${val});`);
         }
 
         // Set text content
         const textContent = el.getTextContent();
         if (textContent !== null) {
-            commands.push(`${currentVar}.textContent = ${JSON.stringify(textContent)};`);
+            const val = textContent.startsWith("$") ? textContent.substring(1) : JSON.stringify(textContent);
+            commands.push(`${currentVar}.textContent = ${val};`);
         }
 
         // Set click handler

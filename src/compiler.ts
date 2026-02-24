@@ -4,28 +4,56 @@ import { Component } from "./component.js";
 import { Element } from "./element.js";
 import { toHtmlString } from "./html-compiler.js";
 import { compileToDomCommands } from "./dom-compiler.js";
+import { renderComponent, removeComponent } from "./html-runtime.js";
 
 
 /**
- * Compiles a Component into a full HTML file and writes it to disk.
+ * Compiles an array of Components into a full HTML file and writes it to disk.
  *
- * @param component - The root Component to compile.
- * @param filePath  - Destination file path (e.g. "./output/index.html").
+ * @param components - The Components to compile. The first one is the root.
+ * @param filePath   - Destination file path (e.g. "./output/index.html").
  */
-export function compileComponentToHtml(component: Component, filePath: string): void {
-  const rootElement = component.getRoot();
-  const bodyContent = toHtmlString(rootElement, 2);
-  const clickHandlers = collectClickHandlers(rootElement);
-  const scriptBlock = buildOnLoadScript(component.getOnLoadHooks(), clickHandlers);
+export function compileComponentsToHtml(components: Component[], filePath: string): void {
+  if (components.length === 0) {
+    throw new Error("At least one component is required for compilation.");
+  }
 
-  const domCommands = compileToDomCommands(rootElement);
-  const idVar = component.uniqueId ? `'${component.uniqueId}'` : `'default'`;
+  const rootComponent = components[0]!;
+  const rootElement = rootComponent.getRoot();
+  const bodyContent = toHtmlString(rootElement, 2);
+
+  const allOnLoadHooks: Array<() => void> = [];
+  const allClickHandlers: Array<{ className: string; handler: () => void }> = [];
+  const allDomScripts: string[] = [];
+
+  for (const component of components) {
+    const element = component.getRoot();
+    allOnLoadHooks.push(...component.getOnLoadHooks());
+    allClickHandlers.push(...collectClickHandlers(element));
+
+    const domCommands = compileToDomCommands(element);
+    const idVar = component.uniqueId ? `'${component.uniqueId}'` : `'default'`;
+    const params = component.parameters.join(", ");
+    allDomScripts.push(`    window.Components[${idVar}] = function(${params}) {
+${domCommands}
+    };`);
+  }
+
+  const runtimeFunctions = [
+    { name: "renderComponent", fn: renderComponent },
+    { name: "removeComponent", fn: removeComponent },
+  ];
+
+  const scriptBlock = buildOnLoadScript(allOnLoadHooks, allClickHandlers);
   const domScriptBlock = `  <script>
     window.Components = window.Components || {};
-    window.Components[${idVar}] = function() {
-${domCommands.split("\n").map(l => "      " + l).join("\n")}
-    };
+${allDomScripts.join("\n")}
   </script>`;
+
+  const runtimeBody = runtimeFunctions
+    .map(rf => rf.fn.toString())
+    .join("\n\n");
+  const runtimeScript = `  <script>\n${runtimeBody}\n  </script>`;
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -36,8 +64,10 @@ ${domCommands.split("\n").map(l => "      " + l).join("\n")}
   </head>
   <body>
 ${bodyContent}
+${runtimeScript}
 ${scriptBlock}
-${domScriptBlock}  </body>
+${domScriptBlock}
+  </body>
 </html>
 `;
 

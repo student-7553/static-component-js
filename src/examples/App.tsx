@@ -1,4 +1,4 @@
-import { h, Fragment } from "../jsx-runtime.js";
+import { h } from "../jsx-runtime.js";
 import { getValue } from "./helper.js";
 
 /**
@@ -24,22 +24,18 @@ function Card({ title, body }: CardProps) {
   );
 }
 
-// just call it from the client
 export default function App() {
 
-  let isEnabled = getValue("tempo");
 
   return (
     <div id="tempoooooo" class="app">
       <h1>Hello from JSX Test!</h1>
       <p>This page was authored in JSX and compiled to static HTML.</p>
 
-      {isEnabled && (
-        <Card
-          title="What is this?"
-          body="A zero-dependency JSX compiler built on top of Element + Component."
-        />
-      )}
+      <Card
+        title="What is this?"
+        body="A zero-dependency JSX compiler built on top of Element + Component."
+      />
 
       <Card
         title="What is this 2?"
@@ -48,7 +44,7 @@ export default function App() {
 
       <button onClick={
         () => {
-          (window as any).tempo = false;
+          const newElement = (window as any).renderComponent("Card2", "tempoooooo", "are we here");
         }
       }
       >Click me</button>

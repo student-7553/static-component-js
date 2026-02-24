@@ -7,7 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "compile": "tsc && node output/jsx-compiler.js src/examples/App.tsx"
+    "compile:test-1": "tsc && node output/main-compiler.js src/examples/App.tsx src/examples/Card2.tsx"
   },
   "repository": {
     "type": "git",

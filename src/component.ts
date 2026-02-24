@@ -3,11 +3,13 @@ import { Element } from "./element.js";
 export class Component {
     protected rootElement: Element;
     public uniqueId: string;
+    public parameters: string[] = [];
     private onLoadHooks: Array<() => void> = [];
 
-    constructor(rootElement: Element, uniqueId: string) {
+    constructor(rootElement: Element, uniqueId: string, parameters: string[] = []) {
         this.rootElement = rootElement;
         this.uniqueId = uniqueId;
+        this.parameters = parameters;
     }
 
     /**
