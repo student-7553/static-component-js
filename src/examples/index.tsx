@@ -10,7 +10,10 @@ interface CardProps {
 
 function Card({ title, body }: CardProps) {
   return (
-    <div class="card">
+    <div class="card" style={{
+      color: "blue",
+      fontSize: "20px"
+    }}>
       <h2>{title}</h2>
       <p>{body}</p>
     </div>

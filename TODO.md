@@ -3,6 +3,7 @@
 - [x] Support component change
 - [x] Support component having dynamic variables
 - [x] Abstact the functions
-- [ ] Add support for CSS
-- [ ] Add minification support to the compiler
+- [x] Add support for inline CSS
+- [x] Add minification support to the compiler
 - [ ] Support nested components
+- [ ] Support for dynamic loading for scripts and components

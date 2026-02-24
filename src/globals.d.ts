@@ -20,7 +20,7 @@ declare namespace JSX {
         children?: JSX.Element | JSX.Element[] | string | number;
         class?: string;
         id?: string;
-        style?: string;
+        style?: string | Record<string, string>;
         href?: string;
         src?: string;
         alt?: string;

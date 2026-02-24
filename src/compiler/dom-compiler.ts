@@ -30,7 +30,13 @@ export function compileToDomCommands(element: Element, varPrefix: string = "el")
         for (const [name, value] of attributes.entries()) {
             if (name === "class") {
                 continue;
-            };
+            }
+            if (name === "style") {
+                // Use cssText for inline styles – avoids setAttribute quirks on style
+                const val = value.startsWith("$") ? value.substring(1) : JSON.stringify(value);
+                commands.push(`${currentVar}.style.cssText = ${val};`);
+                continue;
+            }
             const val = value.startsWith("$") ? value.substring(1) : JSON.stringify(value);
             commands.push(`${currentVar}.setAttribute(${JSON.stringify(name)}, ${val});`);
         }

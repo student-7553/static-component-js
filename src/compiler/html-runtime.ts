@@ -1,3 +1,5 @@
+const componentCache = new Map<string, Node>();
+
 export function renderComponent(key: string, parentId: string): void {
     const parent = document.getElementById(parentId);
     if (!parent) {
@@ -9,9 +11,14 @@ export function renderComponent(key: string, parentId: string): void {
         console.error(`Component not found: ${key}`);
         return;
     }
-    let newElement = componentFn();
+
+    if (!componentCache.has(key)) {
+        componentCache.set(key, componentFn());
+    }
+
+    const cached = componentCache.get(key)!;
+    const newElement = cached.cloneNode(true);
     parent.appendChild(newElement);
-    return newElement;
 }
 
 export function removeComponent(id: string): void {

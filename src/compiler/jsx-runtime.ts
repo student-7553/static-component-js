@@ -52,6 +52,20 @@ export function h(
         el.setOnClick(onClick as () => void);
     }
 
+    // Handle `style` as a CSS object (like JSX/React inline styles)
+    if (attrs.style != null && typeof attrs.style === "object" && !Array.isArray(attrs.style)) {
+        const cssString = Object.entries(attrs.style as Record<string, unknown>)
+            .filter(([, v]) => v != null)
+            .map(([prop, val]) => {
+                // Convert camelCase to kebab-case (e.g. fontSize → font-size)
+                const cssProp = prop.replace(/([A-Z])/g, "-$1").toLowerCase();
+                return `${cssProp}:${String(val)}`;
+            })
+            .join(";");
+        el.setAttribute("style", cssString);
+        delete (attrs as Record<string, unknown>).style;
+    }
+
     // Set HTML attributes (skip non-serialisable values)
     for (const [key, value] of Object.entries(attrs)) {
         if (value != null && typeof value !== "function" && typeof value !== "object") {
