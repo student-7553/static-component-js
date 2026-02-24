@@ -1,4 +1,4 @@
-export function renderComponent(key: string, parentId: string, ...args: any[]): void {
+export function renderComponent(key: string, parentId: string): void {
     const parent = document.getElementById(parentId);
     if (!parent) {
         console.error(`Render target not found: #${parentId}`);
@@ -9,7 +9,7 @@ export function renderComponent(key: string, parentId: string, ...args: any[]): 
         console.error(`Component not found: ${key}`);
         return;
     }
-    let newElement = componentFn(...args);
+    let newElement = componentFn();
     parent.appendChild(newElement);
     return newElement;
 }
@@ -22,3 +22,8 @@ export function removeComponent(id: string): void {
     }
     el.remove();
 }
+
+export const runtimeFunctions = [
+    { name: "renderComponent", fn: renderComponent },
+    { name: "removeComponent", fn: removeComponent },
+];

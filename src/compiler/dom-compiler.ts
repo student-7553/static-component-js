@@ -12,7 +12,7 @@ export function compileToDomCommands(element: Element, varPrefix: string = "el")
     const commands: string[] = [];
     let counter = 0;
 
-    function walk(el: Element, parentVar: string | null): string {
+    function walk(el: Element): string {
         const currentVar = `${varPrefix}${++counter}`;
 
         // Create element
@@ -50,14 +50,14 @@ export function compileToDomCommands(element: Element, varPrefix: string = "el")
 
         // Add children
         for (const child of el.getChildren()) {
-            const childVar = walk(child, currentVar);
+            const childVar = walk(child);
             commands.push(`${currentVar}.appendChild(${childVar});`);
         }
 
         return currentVar;
     }
 
-    const rootVar = walk(element, null);
+    const rootVar = walk(element);
     commands.push(`return ${rootVar}`);
 
     return commands.join("\n");

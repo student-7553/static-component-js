@@ -13,7 +13,7 @@ declare namespace JSX {
      * Must match the return type of the h() factory function.
      */
     // eslint-disable-next-line @typescript-eslint/no-empty-interface
-    interface Element extends InstanceType<typeof import("./src/element.ts").Element> { }
+    interface Element extends InstanceType<typeof import("./compiler/element.ts").Element> { }
 
     /** Props accepted by any intrinsic HTML element. */
     interface IntrinsicElementProps {

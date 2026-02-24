@@ -5,8 +5,8 @@ import { Element } from "./element.js";
  * The element's unique class name is always included in the class attribute
  * so the compiler can attach event listeners by selector.
  */
-export function toHtmlString(element: Element, indent: number = 0): string {
-    const pad = "  ".repeat(indent);
+export function toHtmlString(element: Element): string {
+    // const pad = "  ".repeat(indent);
 
     // Merge the unique class name with any user-supplied class attribute.
     const attributes = element.getAttributes();
@@ -30,16 +30,16 @@ export function toHtmlString(element: Element, indent: number = 0): string {
 
     if (children.length > 0) {
         const childLines = children
-            .map((c) => toHtmlString(c, indent + 1))
+            .map((c) => toHtmlString(c))
             .join("\n");
-        return `${pad}${openTag}\n${childLines}\n${pad}${closeTag}`;
+        return `${openTag}\n${childLines}\n${closeTag}`;
     }
 
     if (textContent !== null) {
-        return `${pad}${openTag}${escapeHtml(textContent)}${closeTag}`;
+        return `${openTag}${escapeHtml(textContent)}${closeTag}`;
     }
 
-    return `${pad}${openTag}${closeTag}`;
+    return `${openTag}${closeTag}`;
 }
 
 function escapeHtml(text: string): string {
