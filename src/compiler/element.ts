@@ -1,9 +1,11 @@
+import type { Component } from "./component.js";
+
 let _elementCounter = 0;
 
 export class Element {
     private tagName: string;
     private attributes: Map<string, string> = new Map();
-    private children: Element[] = [];
+    private children: (Element | Component)[] = [];
     private textContent: string | null = null;
 
     /** Stable, unique CSS class name used to wire up event handlers at compile time. */
@@ -41,7 +43,7 @@ export class Element {
         return this.onClickHandler;
     }
 
-    public addChild(child: Element): void {
+    public addChild(child: Element | Component): void {
         this.children.push(child);
     }
 
@@ -53,7 +55,7 @@ export class Element {
         this.attributes.set(name, value);
     }
 
-    public getChildren(): Element[] {
+    public getChildren(): (Element | Component)[] {
         return this.children;
     }
 

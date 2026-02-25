@@ -1,4 +1,5 @@
-import { h } from "../compiler/jsx-runtime.js";
+import { h } from "../compiler/jsx-compile-time.js";
+import Card2 from "./Card2.js";
 import { getValue } from "./helper.js";
 import { addNewComponent } from "./index-scripts.js";
 
@@ -31,19 +32,11 @@ export default function App() {
         body="A zero-dependency JSX compiler built on top of Element + Component."
       />
 
-      <Card
-        title="What is this 2?"
-        body="A zero-dependency JSX compiler built on top of Element + Component."
-      />
+      <Card2 />
+
       <button onClick={
         () => {
-          addNewComponent();
-        }
-      }
-      >Click me</button>
-      <button onClick={
-        () => {
-          console.log(getValue("tempo"));
+          addNewComponent("Card1", "tempoooooo");
         }
       }
       >Click me</button>

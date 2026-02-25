@@ -1,4 +1,5 @@
 import { Element } from "./element.js";
+import { Component } from "./component.js";
 
 /**
  * Compiles an Element tree into a series of JavaScript commands that,
@@ -56,6 +57,15 @@ export function compileToDomCommands(element: Element, varPrefix: string = "el")
 
         // Add children
         for (const child of el.getChildren()) {
+            if (child instanceof Component) {
+                // Render component child via its registered factory in window.components
+                const childVar = `${varPrefix}${++counter}`;
+                const componentKey = child.uniqueId;
+                commands.push(`const ${childVar} = window.components['${componentKey}']();`);
+                commands.push(`${currentVar}.appendChild(${childVar});`);
+                continue;
+            }
+
             const childVar = walk(child);
             commands.push(`${currentVar}.appendChild(${childVar});`);
         }

@@ -2,13 +2,16 @@ import { Element } from "./element.js";
 
 export class Component {
     protected rootElement: Element;
+    protected rootFileName: string;
+
     public uniqueId: string;
     public parameters: string[] = [];
     private onLoadHooks: Array<() => void> = [];
 
-    constructor(rootElement: Element, uniqueId: string, parameters: string[] = []) {
+    constructor(rootElement: Element, uniqueId: string, rootFileName: string, parameters: string[] = []) {
         this.rootElement = rootElement;
         this.uniqueId = uniqueId;
+        this.rootFileName = rootFileName;
         this.parameters = parameters;
     }
 

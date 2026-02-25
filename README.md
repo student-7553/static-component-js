@@ -9,7 +9,7 @@ Traditional frontend frameworks (like React) rely on a Virtual DOM (VDOM) and a 
 - **🚀 No Hydration**: Unlike VDOM-based frameworks, there is no heavy reconciliation or hydration step. The page is interactive as soon as the minimal script loads.
 - **⚡ Lower DOM Overhead**: By compiling JSX to direct DOM manipulation commands (`createElement`, `appendChild`), the framework bypasses the performance tax of VDOM diffing.
 - **📦 Zero Dependencies**: A tiny runtime footprint ensures your site stays fast and lean.
-- **🧩 Dynamic Components**: Supports dynamic component switching at runtime, allowing for complex interactive flows without the complexity of a full SPA framework.
+- **🧩 Dynamic components**: Supports dynamic component switching at runtime, allowing for complex interactive flows without the complexity of a full SPA framework.
 
 ## Project Structure
 

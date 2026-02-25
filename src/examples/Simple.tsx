@@ -1,4 +1,4 @@
-import { h } from "../compiler/jsx-runtime.js";
+import { h } from "../compiler/jsx-compile-time.js";
 
 export default function Simple() {
     return (

@@ -1,6 +1,7 @@
 import { Element } from "./element.js";
+import { Component } from "./component.js";
 
-type Child = Element | string | number | boolean | null | undefined;
+type Child = Element | Component | string | number | boolean | null | undefined;
 
 interface Props {
     children?: Child | Child[];
@@ -27,7 +28,7 @@ export function h(
     type: string | ((props: Props) => Element),
     props: Props | null,
     ...children: Child[]
-): Element {
+): Element | Component {
     // ── Function component ────────────────────────────────────────────────────
     if (typeof type === "function") {
         const mergedProps: Props = {
@@ -39,7 +40,17 @@ export function h(
                         ? children
                         : undefined,
         };
-        return type(mergedProps);
+        const result = type(mergedProps);
+
+        // Functions prefixed with "INNER_" are treated as inline elements,
+        // not as separate components.
+        if (type.name.endsWith("_INNER")) {
+            return result;
+        }
+
+        // Wrap in a Component to preserve the component boundary
+        // so the dom-compiler can emit window.components[name]() calls
+        return new Component(result, type.name, "");
     }
 
     // ── Intrinsic element ─────────────────────────────────────────────────────
@@ -84,7 +95,7 @@ export function h(
                     : [];
 
     for (const child of effectiveChildren) {
-        if (child instanceof Element) {
+        if (child instanceof Element || child instanceof Component) {
             el.addChild(child);
         } else if (child != null && child !== true && child !== false) {
             el.setText(String(child));
@@ -108,7 +119,7 @@ export function Fragment(props: Props): Element {
             ? [props.children]
             : [];
     for (const child of kids) {
-        if (child instanceof Element) {
+        if (child instanceof Element || child instanceof Component) {
             wrapper.addChild(child);
         }
     }

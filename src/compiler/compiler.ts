@@ -9,9 +9,9 @@ import { compileToDomCommands } from "./dom-compiler.js";
 import { runtimeFunctions } from "./html-runtime.js";
 
 /**
- * Compiles an array of Components into a full HTML file and writes it to disk.
+ * Compiles an array of components into a full HTML file and writes it to disk.
  *
- * @param components - The Components to compile. The first one is the root.
+ * @param components - The components to compile. The first one is the root.
  * @param filePath   - Destination file path (e.g. "./output/index.html").
  */
 export async function compileComponentsToHtml(components: Component[], filePath: string, externalScriptUrls: string[] = []): Promise<void> {
@@ -35,12 +35,12 @@ export async function compileComponentsToHtml(components: Component[], filePath:
         const domCommands = compileToDomCommands(element);
         const idVar = component.uniqueId ? `'${component.uniqueId}'` : `'default'`;
         const params = component.parameters.join(", ");
-        allDomScripts.push(`window.Components[${idVar}] = function(${params}) {${domCommands}};`);
+        allDomScripts.push(`window.components[${idVar}] = function(${params}) {${domCommands}};`);
     }
 
 
     const scriptBlock = buildOnLoadScript(allOnLoadHooks, allClickHandlers);
-    const domScriptBlock = `  <script> window.Components = window.Components || {}; ${allDomScripts.join("\n")} </script>`;
+    const domScriptBlock = `  <script> window.components = window.components || {}; ${allDomScripts.join("\n")} </script>`;
 
     const runtimeBody = runtimeFunctions
         .map(rf => rf.fn.toString())
@@ -96,7 +96,8 @@ function collectClickHandlers(
     }
 
     for (const child of el.getChildren()) {
-        results.push(...collectClickHandlers(child));
+        const childElement = child instanceof Component ? child.getRoot() : child;
+        results.push(...collectClickHandlers(childElement));
     }
 
     return results;
@@ -192,6 +193,8 @@ const tsxFileList = [
 
 
 const components: Component[] = [];
+/** Maps each TSX file's basename (without extension) to its default-export function. */
+const tsxFunctionMap = new Map<string, (...args: string[]) => Element | Component>();
 
 for (const tsxFile of tsxFileList) {
     const srcPath = path.resolve(tsxFile);
@@ -215,16 +218,26 @@ for (const tsxFile of tsxFileList) {
 
     const parameterNames = getParameterNames(DefaultExport as Function);
     const placeholders = parameterNames.map(p => `$${p}`);
-    const componentFunction = DefaultExport as (...args: string[]) => Element;
-    const element = componentFunction(...placeholders);
+    const componentFunction = DefaultExport as (...args: string[]) => Element | Component;
 
-    if (!(element instanceof Element)) {
-        console.error(`Default export of ${tsxFile} did not return an Element instance.`);
+    // Store the function in the map keyed by TSX filename (e.g. "Card1", "index")
+    const fileKey = path.basename(tsxFile, path.extname(tsxFile));
+    tsxFunctionMap.set(fileKey, componentFunction);
+
+    const result = componentFunction(...placeholders);
+
+    let element: Element;
+    if (result instanceof Component) {
+        element = result.getRoot();
+    } else if (result instanceof Element) {
+        element = result;
+    } else {
+        console.error(`Default export of ${tsxFile} did not return an Element or Component instance.`);
         process.exit(1);
     }
 
     const uniqueId = path.basename(tsxFile, path.extname(tsxFile));
-    components.push(new Component(element, uniqueId, parameterNames));
+    components.push(new Component(element, uniqueId, fileKey, parameterNames));
 
 }
 

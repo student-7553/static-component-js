@@ -1,4 +1,5 @@
 import { Element } from "./element.js";
+import { Component } from "./component.js";
 
 /**
  * Serializes an Element and its children into an HTML string.
@@ -30,7 +31,7 @@ export function toHtmlString(element: Element): string {
 
     if (children.length > 0) {
         const childLines = children
-            .map((c) => toHtmlString(c))
+            .map((c) => c instanceof Component ? toHtmlString(c.getRoot()) : toHtmlString(c))
             .join("\n");
         return `${openTag}\n${childLines}\n${closeTag}`;
     }
