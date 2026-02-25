@@ -70,12 +70,14 @@ export async function compileComponentsToHtml(components: Component[], filePath:
         fs.mkdirSync(dir, { recursive: true });
     }
 
-    const minifiedHtml = await minifyHtml(html, {
-        collapseWhitespace: true,
-        removeComments: true,
-        minifyJS: true,
-        minifyCSS: true,
-    });
+    // const minifiedHtml = await minifyHtml(html, {
+    //     collapseWhitespace: true,
+    //     removeComments: true,
+    //     minifyJS: true,
+    //     minifyCSS: true,
+    // });
+
+    const minifiedHtml = html;
 
     fs.writeFileSync(filePath, minifiedHtml, "utf-8");
     console.log(`HTML compiled to:      ${path.resolve(filePath)}`);
@@ -175,20 +177,34 @@ const srcDir = path.join(projectRoot, "src");
 // If the first argument is a directory, expand it and identify external scripts
 
 const folderPath = sourceArgs[0]!;
-const filesInFolder = fs.readdirSync(folderPath);
 
-const indexTsx = filesInFolder.find(f => f === "index.tsx");
+/** Recursively collects all files with the given extensions under `dir`. */
+function collectFilesRecursive(dir: string, extensions: string[]): string[] {
+    const results: string[] = [];
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+            results.push(...collectFilesRecursive(fullPath, extensions));
+        } else if (extensions.some(ext => entry.name.endsWith(ext))) {
+            results.push(fullPath);
+        }
+    }
+    return results;
+}
+
+const allTsxFiles = collectFilesRecursive(folderPath, [".tsx"]);
+
+const indexTsx = allTsxFiles.find(f => path.basename(f) === "index.tsx");
 if (!indexTsx) {
     console.error(`index.tsx not found in folder: ${folderPath}`);
     process.exit(1);
 }
 
-
-const otherTsxFiles = filesInFolder.filter(f => f.endsWith(".tsx") && f !== "index.tsx");
+const otherTsxFiles = allTsxFiles.filter(f => f !== indexTsx);
 
 const tsxFileList = [
-    path.join(folderPath, indexTsx),
-    ...otherTsxFiles.map(f => path.join(folderPath, f)),
+    indexTsx,
+    ...otherTsxFiles,
 ];
 
 
@@ -243,11 +259,11 @@ for (const tsxFile of tsxFileList) {
 
 // Now process external scripts (strip exports, minify) and collect URLs
 
-const otherTsFiles = filesInFolder.filter(f => f.endsWith(".ts"));
+const allTsFiles = collectFilesRecursive(folderPath, [".ts"]);
 const externalScriptProcessing: Array<{ absPath: string; relPath: string }> = [];
 
-for (const tsFile of otherTsFiles) {
-    const tsPath = path.join(folderPath, tsFile);
+for (const tsFile of allTsFiles) {
+    const tsPath = tsFile;
     const relativeTs = path.relative(srcDir, tsPath);
     const jsRelPath = relativeTs.replace(/\.ts$/, ".js");
     const jsAbsPath = path.join(projectRoot, "build", jsRelPath);

@@ -1,5 +1,6 @@
 import { h } from "../compiler/jsx-compile-time.js";
 import Card2 from "./Card2.js";
+import Card4 from "./testd/Card4.js";
 
 
 function Card3_INNER() {
@@ -16,6 +17,10 @@ export default function Card1() {
       <p> Card 1 </p>
       <Card2 />
       <Card3_INNER />
+      <Card4 />
+      <p>
+        ----------------
+      </p>
     </div>
   );
 }

@@ -5,5 +5,5 @@
 - [x] Abstact the functions
 - [x] Add support for inline CSS
 - [x] Add minification support to the compiler
-- [ ] Support nested components
+- [x] Support nested components
 - [ ] Support for dynamic loading for scripts and components
