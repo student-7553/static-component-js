@@ -8,12 +8,10 @@ Traditional frontend frameworks (like React) rely on a Virtual DOM (VDOM) and a 
 
 - **🚀 No Hydration**: Unlike VDOM-based frameworks, there is no heavy reconciliation or hydration step. The page is interactive as soon as the minimal script loads.
 - **⚡ Lower DOM Overhead**: By compiling JSX to direct DOM manipulation commands (`createElement`, `appendChild`), the framework bypasses the performance tax of VDOM diffing.
-<!-- - **📦 Zero Dependencies**: A tiny runtime footprint ensures your site stays fast and lean.
-- **🧩 Dynamic components**: Supports dynamic component switching at runtime, allowing for complex interactive flows without the complexity of a full SPA framework. -->
 
 ## Project Structure
 
-- `src/`: Framework core and component authoring.
+- `src/compiler/`: Framework core and component authoring.
   - `jsx-runtime.ts`: The JSX transform factory.
   - `jsx-compiler.ts`: CLI tool to compile your JSX/TSX site.
   - `compiler.ts`: The build engine that orchestrates HTML and JS generation.
@@ -33,7 +31,7 @@ npm install
 ### 2. Build Your Site
 The framework compiles your JSX components into a static + interactive bundle:
 ```bash
-npm run compile
+tsc && node build/compiler/compiler.js {path-to-root-component-folder}
 ```
 
 ### 3. Deploy
@@ -42,6 +40,6 @@ Simply serve the `output/` directory. Your site is ready for the world.
 ## How it Works: The Hybrid Approach
 
 1. **Build Time**: The compiler analyzes your JSX tree and produces two outputs:
-   - A static HTML representation for instant first paint and SEO.
+   - A static HTML representation for instant first paint.
    - A set of imperative JavaScript commands that mirror the tree structure.
-2. **Runtime**: Instead of "hydrating" a VDOM, the framework uses the pre-compiled commands to attach event listeners and support dynamic updates directly to the real DOM. This "reconstruction" approach is fundamentally faster than traditional hydration for static-oriented sites.
+2. **Runtime**: Instead of "hydrating" a VDOM, the framework uses the pre-compiled commands to directly update the real DOM. This "reconstruction" and "update" approach is fundamentally faster than traditional hydration for static-oriented sites.
