@@ -51,8 +51,15 @@ export function compileToDomCommands(element: Element, varPrefix: string = "el")
 
         // Set click handler
         const onClick = el.getOnClickHandler();
-        if (onClick !== null) {
-            commands.push(`${currentVar}.onclick = ${onClick.toString()};`);
+        if (onClick) {
+            let handlerStr = "";
+            if (onClick.event === "render") {
+                handlerStr = `window.renderComponent('${onClick.component}', '${onClick.data.target}')`;
+            } else if (onClick.event === "function") {
+                const args = Object.values(onClick.data).map(v => JSON.stringify(v)).join(", ");
+                handlerStr = `${onClick.name}(${args})`;
+            }
+            commands.push(`${currentVar}.setAttribute("onclick", ${JSON.stringify(handlerStr)});`);
         }
 
         // Add children

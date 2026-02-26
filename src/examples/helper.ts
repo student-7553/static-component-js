@@ -19,3 +19,6 @@ export function setValue(key: string, value: string) {
     }
     (window as any).kv[key] = value;
 }
+function myCustomFunction() {
+    console.log("myCustomFunction is called..");
+}

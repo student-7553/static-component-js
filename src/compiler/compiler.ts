@@ -23,24 +23,29 @@ export async function compileComponentsToHtml(components: Component[], filePath:
     const rootElement = rootComponent.getRoot();
     const bodyContent = toHtmlString(rootElement);
 
-    const allOnLoadHooks: Array<() => void> = [];
-    const allClickHandlers: Array<{ className: string; handler: () => void }> = [];
     const allDomScripts: string[] = [];
 
     for (const component of components) {
         const element = component.getRoot();
-        allOnLoadHooks.push(...component.getOnLoadHooks());
-        allClickHandlers.push(...collectClickHandlers(element));
-
         const domCommands = compileToDomCommands(element);
         const idVar = component.uniqueId ? `'${component.uniqueId}'` : `'default'`;
         const params = component.parameters.join(", ");
         allDomScripts.push(`window.components[${idVar}] = function(${params}) {${domCommands}};`);
     }
 
+    let domCommandFileNames = [];
+    let index = 0;
+    for (const singleDomScript of allDomScripts) {
+        const domCommandsJs = `window.components = window.components || {};${singleDomScript} `;
+        const minifiedDomJs = (await minifyJs(domCommandsJs, { compress: true, mangle: true })).code ?? domCommandsJs;
+        let fileName = `dom-commands-${index}.js`;
+        domCommandFileNames.push(fileName);
+        const domOutPath = path.join(path.dirname(filePath), fileName);
+        fs.writeFileSync(domOutPath, minifiedDomJs, "utf-8");
+        index++;
+    }
 
-    const scriptBlock = buildOnLoadScript(allOnLoadHooks, allClickHandlers);
-    const domScriptBlock = `  <script> window.components = window.components || {}; ${allDomScripts.join("\n")} </script>`;
+    const domScriptBlock = domCommandFileNames.map(fileName => `<script async src="./${fileName}"></script>`).join("");
 
     const runtimeBody = runtimeFunctions
         .map(rf => rf.fn.toString())
@@ -60,7 +65,6 @@ export async function compileComponentsToHtml(components: Component[], filePath:
         ${bodyContent}
         ${extraScripts}
         ${runtimeScript}
-        ${scriptBlock}
         ${domScriptBlock}
         </body>
         </html>`;
@@ -70,69 +74,17 @@ export async function compileComponentsToHtml(components: Component[], filePath:
         fs.mkdirSync(dir, { recursive: true });
     }
 
-    // const minifiedHtml = await minifyHtml(html, {
-    //     collapseWhitespace: true,
-    //     removeComments: true,
-    //     minifyJS: true,
-    //     minifyCSS: true,
-    // });
-
-    const minifiedHtml = html;
+    const minifiedHtml = await minifyHtml(html, {
+        collapseWhitespace: true,
+        removeComments: true,
+        minifyJS: true,
+        minifyCSS: true,
+    });
 
     fs.writeFileSync(filePath, minifiedHtml, "utf-8");
     console.log(`HTML compiled to:      ${path.resolve(filePath)}`);
 }
 
-/**
- * Recursively walks the element tree and returns every element that has a
- * click handler registered, along with its unique class name and handler.
- */
-function collectClickHandlers(
-    el: Element
-): Array<{ className: string; handler: () => void }> {
-    const results: Array<{ className: string; handler: () => void }> = [];
-
-    const handler = el.getOnClickHandler();
-    if (handler !== null) {
-        results.push({ className: el.getUniqueClassName(), handler });
-    }
-
-    for (const child of el.getChildren()) {
-        const childElement = child instanceof Component ? child.getRoot() : child;
-        results.push(...collectClickHandlers(childElement));
-    }
-
-    return results;
-}
-
-/**
- * Serializes onLoad hooks and element click handlers into a <script> block
- * that wires everything up inside window.onload.
- * Returns an empty string if there is nothing to emit.
- */
-function buildOnLoadScript(
-    hooks: Array<() => void>,
-    clickHandlers: Array<{ className: string; handler: () => void }>
-): string {
-    if (hooks.length === 0 && clickHandlers.length === 0) return "";
-
-    const hookLines = hooks.map((fn) => `    (${fn.toString()})();`).join("\n");
-
-    const clickLines = clickHandlers
-        .map(
-            ({ className, handler }) =>
-                `    document.querySelector('.${className}').addEventListener('click', ${handler.toString()});`
-        )
-        .join("\n");
-
-    const body = [hookLines, clickLines].filter(Boolean).join("\n");
-
-    return `  <script>
-  window.onload = function() {
-${body}
-  };
-  </script>\n`;
-}
 
 /**
  * Extracts parameter names from a function's string representation.
@@ -297,5 +249,5 @@ for (const { absPath, relPath } of externalScriptProcessing) {
 
 // ── Produce HTML ─────────────────────────────────────────────────────────────
 const htmlOutPath = path.join(projectRoot, "output", "index.html");
-compileComponentsToHtml(components, htmlOutPath, externalScriptUrls);
+await compileComponentsToHtml(components, htmlOutPath, externalScriptUrls);
 

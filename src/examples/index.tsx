@@ -1,7 +1,5 @@
 import { h } from "../compiler/jsx-compile-time.js";
 import Card2 from "./Card2.js";
-import { getValue } from "./helper.js";
-import { addNewComponent } from "./index-scripts.js";
 
 
 interface CardProps {
@@ -35,11 +33,26 @@ export default function App() {
       <Card2 />
 
       <button onClick={
-        () => {
-          addNewComponent("Card1", "tempoooooo");
+        {
+          event: "render",
+          component: "Card1",
+          data: {
+            target: "tempoooooo"
+          }
         }
       }
       >Click me</button>
+
+      <button onClick={
+        {
+          event: "function",
+          name: "myCustomFunction",
+          data: {
+            msg: "Hello from JSX!",
+            count: 42
+          }
+        }
+      }>Call Custom Function</button>
     </div >
   );
 }

@@ -2,6 +2,20 @@ import type { Component } from "./component.js";
 
 let _elementCounter = 0;
 
+export type OnClickObject =
+    | {
+        event: "render";
+        component: string;
+        data: {
+            target: string;
+        };
+    }
+    | {
+        event: "function";
+        name: string;
+        data: Record<string, any>;
+    };
+
 export class Element {
     private tagName: string;
     private attributes: Map<string, string> = new Map();
@@ -12,7 +26,7 @@ export class Element {
     private readonly uniqueClassName: string;
 
     /** Optional click handler serialised into the compiled <script> block. */
-    private onClickHandler: (() => void) | null = null;
+    private onClickHandler: OnClickObject | null = null;
 
     constructor(tagName: string) {
         this.tagName = tagName;
@@ -35,11 +49,11 @@ export class Element {
         return this.textContent;
     }
 
-    public setOnClick(callback: () => void): void {
+    public setOnClick(callback: OnClickObject): void {
         this.onClickHandler = callback;
     }
 
-    public getOnClickHandler(): (() => void) | null {
+    public getOnClickHandler(): OnClickObject | null {
         return this.onClickHandler;
     }
 

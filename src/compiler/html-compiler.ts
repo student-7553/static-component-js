@@ -23,8 +23,22 @@ export function toHtmlString(element: Element): string {
     const mergedAttrs = new Map(attributes);
     mergedAttrs.set("class", classValue);
 
+    const onClick = element.getOnClickHandler();
+    if (onClick) {
+        let handlerStr = "";
+        if (onClick.event === "render") {
+            handlerStr = `window.renderComponent('${onClick.component}', '${onClick.data.target}')`;
+        } else if (onClick.event === "function") {
+            const args = Object.values(onClick.data).map(v => JSON.stringify(v)).join(", ");
+            handlerStr = `${onClick.name}(${args})`;
+        }
+        mergedAttrs.set("onclick", handlerStr);
+    }
+
     const attrs = Array.from(mergedAttrs.entries())
-        .map(([k, v]) => ` ${k}="${escapeAttr(v)}"`)
+        .map(([k, v]) => {
+            return ` ${k}="${escapeAttr(v)}"`;
+        })
         .join("");
     const openTag = `<${tagName}${attrs}>`;
     const closeTag = `</${tagName}>`;
@@ -51,5 +65,5 @@ function escapeHtml(text: string): string {
 }
 
 function escapeAttr(value: string): string {
-    return value.replace(/"/g, "&quot;").replace(/&/g, "&amp;");
+    return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
 }

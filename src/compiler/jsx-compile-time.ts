@@ -1,11 +1,12 @@
 import { Element } from "./element.js";
+import type { OnClickObject } from "./element.js";
 import { Component } from "./component.js";
 
 type Child = Element | Component | string | number | boolean | null | undefined;
 
 interface Props {
     children?: Child | Child[];
-    onClick?: () => void;
+    onClick?: OnClickObject;
     [key: string]: unknown;
 }
 
@@ -59,8 +60,8 @@ export function h(
     const { onClick, children: propsChildren, ...attrs } = props ?? {};
 
     // Wire click handler
-    if (typeof onClick === "function") {
-        el.setOnClick(onClick as () => void);
+    if (onClick != null && typeof onClick === "object") {
+        el.setOnClick(onClick as OnClickObject);
     }
 
     // Handle `style` as a CSS object (like JSX/React inline styles)

@@ -28,7 +28,7 @@ declare namespace JSX {
         name?: string;
         value?: string;
         placeholder?: string;
-        onClick?: () => void;
+        onClick?: import("./compiler/element.ts").OnClickObject;
         [attr: string]: unknown;
     }
 
