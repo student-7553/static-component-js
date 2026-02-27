@@ -7,9 +7,6 @@ import { Component } from "./component.js";
  * so the compiler can attach event listeners by selector.
  */
 export function toHtmlString(element: Element): string {
-    // const pad = "  ".repeat(indent);
-
-    // Merge the unique class name with any user-supplied class attribute.
     const attributes = element.getAttributes();
     const uniqueClassName = element.getUniqueClassName();
     const tagName = element.getTagName();

@@ -14,7 +14,7 @@ import { runtimeFunctions } from "./html-runtime.js";
  * @param components - The components to compile. The first one is the root.
  * @param filePath   - Destination file path (e.g. "./output/index.html").
  */
-export async function compileComponentsToHtml(components: Component[], filePath: string, externalScriptUrls: string[] = []): Promise<void> {
+export async function compileComponentsToHtml(components: Component[], filePath: string, externalScriptUrls: string[] = [], cssBlock: string = "", domCommandFileNames: string[] = []): Promise<void> {
     if (components.length === 0) {
         throw new Error("At least one component is required for compilation.");
     }
@@ -22,28 +22,6 @@ export async function compileComponentsToHtml(components: Component[], filePath:
     const rootComponent = components[0]!;
     const rootElement = rootComponent.getRoot();
     const bodyContent = toHtmlString(rootElement);
-
-    const allDomScripts: string[] = [];
-
-    for (const component of components) {
-        const element = component.getRoot();
-        const domCommands = compileToDomCommands(element);
-        const idVar = component.uniqueId ? `'${component.uniqueId}'` : `'default'`;
-        const params = component.parameters.join(", ");
-        allDomScripts.push(`window.components[${idVar}] = function(${params}) {${domCommands}};`);
-    }
-
-    let domCommandFileNames = [];
-    let index = 0;
-    for (const singleDomScript of allDomScripts) {
-        const domCommandsJs = `window.components = window.components || {};${singleDomScript} `;
-        const minifiedDomJs = (await minifyJs(domCommandsJs, { compress: true, mangle: true })).code ?? domCommandsJs;
-        let fileName = `dom-commands-${index}.js`;
-        domCommandFileNames.push(fileName);
-        const domOutPath = path.join(path.dirname(filePath), fileName);
-        fs.writeFileSync(domOutPath, minifiedDomJs, "utf-8");
-        index++;
-    }
 
     const domScriptBlock = domCommandFileNames.map(fileName => `<script async src="./${fileName}"></script>`).join("");
 
@@ -60,6 +38,9 @@ export async function compileComponentsToHtml(components: Component[], filePath:
             <meta charset="UTF-8" />
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
             <title>Compiled Component</title>
+            <style>
+        ${cssBlock}
+            </style>
         </head>
         <body>
         ${bodyContent}
@@ -95,6 +76,83 @@ function getParameterNames(fn: Function): string[] {
     return result || [];
 }
 
+
+async function writeScriptBlock(externalScriptProcessing: Array<{ absPath: string; relPath: string }>) {
+    let externalScriptUrls: string[] = [];
+
+    for (const { absPath, relPath } of externalScriptProcessing) {
+        if (!fs.existsSync(absPath)) {
+            console.warn(`Compiled JS not found at: ${absPath}`);
+            continue;
+        }
+
+        let jsContent = fs.readFileSync(absPath, "utf-8");
+        jsContent = jsContent.replace(/^export\s+/gm, "");
+
+        const minifyResult = await minifyJs(jsContent, { compress: true, mangle: true });
+        const minifiedJs = minifyResult.code ?? jsContent;
+
+        const finalJsAbsPath = path.join(projectRoot, "output", relPath);
+        const finalJsDir = path.dirname(finalJsAbsPath);
+        if (!fs.existsSync(finalJsDir)) {
+            fs.mkdirSync(finalJsDir, { recursive: true });
+        }
+
+        fs.writeFileSync(finalJsAbsPath, minifiedJs, "utf-8");
+        console.log(`JS (minified) written to: ${finalJsAbsPath}`);
+        externalScriptUrls.push("./" + relPath);
+    }
+
+    return externalScriptUrls;
+}
+
+async function getCSSBlock(cssScriptProcessing: Array<{ absPath: string }>) {
+    let allGeneratedCss = "";
+    for (const { absPath } of cssScriptProcessing) {
+        if (!fs.existsSync(absPath)) {
+            console.warn(`Compiled JS not found for CSS script at: ${absPath}`);
+            continue;
+        }
+
+        // Import the compiled JS file
+        const mod = await import(absPath) as { default?: unknown };
+        const DefaultExport = mod.default;
+
+        const styleObj: Record<string, unknown> = typeof DefaultExport === "function" ? DefaultExport() : DefaultExport;
+        if (styleObj !== null) {
+            for (const [selector, rules] of Object.entries(styleObj)) {
+                allGeneratedCss += `${selector} {\n`;
+                for (const [prop, val] of Object.entries(rules as Record<string, string>)) {
+                    allGeneratedCss += `  ${prop}: ${val};\n`;
+                }
+                allGeneratedCss += "}\n";
+            }
+        }
+    }
+    return allGeneratedCss;
+}
+
+async function writeDomCommands(components: Component[], filePath: string) {
+    let domCommandFileNames = [];
+    let index = 0;
+    for (const component of components) {
+        const element = component.getRoot();
+        const domCommands = compileToDomCommands(element);
+        const idVar = component.uniqueId ? `'${component.uniqueId}'` : `'default'`;
+        const params = component.parameters.join(", ");
+
+        const domScript = `window.components = window.components || {};window.components[${idVar}] = function(${params}) {${domCommands}};`;
+        const minifiedDomJs = (await minifyJs(domScript, { compress: true, mangle: true })).code ?? domScript;
+        let fileName = `dom-commands-${index}.js`;
+        domCommandFileNames.push(fileName);
+        const domOutPath = path.join(path.dirname(filePath), fileName);
+        fs.writeFileSync(domOutPath, minifiedDomJs, "utf-8");
+        index++;
+    }
+
+    return domCommandFileNames;
+}
+
 /**
  * CLI entry-point: compiles one or more JSX/TSX components to HTML + JS output.
  *
@@ -125,8 +183,6 @@ const projectRoot = process.cwd();
 const srcDir = path.join(projectRoot, "src");
 
 
-
-// If the first argument is a directory, expand it and identify external scripts
 
 const folderPath = sourceArgs[0]!;
 
@@ -188,7 +244,6 @@ for (const tsxFile of tsxFileList) {
     const placeholders = parameterNames.map(p => `$${p}`);
     const componentFunction = DefaultExport as (...args: string[]) => Element | Component;
 
-    // Store the function in the map keyed by TSX filename (e.g. "Card1", "index")
     const fileKey = path.basename(tsxFile, path.extname(tsxFile));
     tsxFunctionMap.set(fileKey, componentFunction);
 
@@ -209,45 +264,30 @@ for (const tsxFile of tsxFileList) {
 
 }
 
-// Now process external scripts (strip exports, minify) and collect URLs
-
 const allTsFiles = collectFilesRecursive(folderPath, [".ts"]);
 const externalScriptProcessing: Array<{ absPath: string; relPath: string }> = [];
+const cssScriptProcessing: Array<{ absPath: string }> = [];
 
 for (const tsFile of allTsFiles) {
     const tsPath = tsFile;
     const relativeTs = path.relative(srcDir, tsPath);
     const jsRelPath = relativeTs.replace(/\.ts$/, ".js");
     const jsAbsPath = path.join(projectRoot, "build", jsRelPath);
-    externalScriptProcessing.push({ absPath: jsAbsPath, relPath: jsRelPath });
+
+    if (tsFile.endsWith("_CSS.ts")) {
+        cssScriptProcessing.push({ absPath: jsAbsPath });
+    } else {
+        externalScriptProcessing.push({ absPath: jsAbsPath, relPath: jsRelPath });
+    }
 }
 
-let externalScriptUrls: string[] = [];
 
-for (const { absPath, relPath } of externalScriptProcessing) {
-    if (!fs.existsSync(absPath)) {
-        console.warn(`Compiled JS not found at: ${absPath}`);
-        continue;
-    }
+const htmlOutPath = path.join(projectRoot, "output", "index.html");
 
-    let jsContent = fs.readFileSync(absPath, "utf-8");
-    jsContent = jsContent.replace(/^export\s+/gm, "");
-
-    const minifyResult = await minifyJs(jsContent, { compress: true, mangle: true });
-    const minifiedJs = minifyResult.code ?? jsContent;
-
-    const finalJsAbsPath = path.join(projectRoot, "output", relPath);
-    const finalJsDir = path.dirname(finalJsAbsPath);
-    if (!fs.existsSync(finalJsDir)) {
-        fs.mkdirSync(finalJsDir, { recursive: true });
-    }
-
-    fs.writeFileSync(finalJsAbsPath, minifiedJs, "utf-8");
-    console.log(`JS (minified) written to: ${finalJsAbsPath}`);
-    externalScriptUrls.push("./" + relPath);
-}
+const allGeneratedCss = await getCSSBlock(cssScriptProcessing);
+const externalScriptUrls = await writeScriptBlock(externalScriptProcessing);
+const domCommandUrls = await writeDomCommands(components, htmlOutPath);
 
 // ── Produce HTML ─────────────────────────────────────────────────────────────
-const htmlOutPath = path.join(projectRoot, "output", "index.html");
-await compileComponentsToHtml(components, htmlOutPath, externalScriptUrls);
+await compileComponentsToHtml(components, htmlOutPath, externalScriptUrls, allGeneratedCss, domCommandUrls);
 
