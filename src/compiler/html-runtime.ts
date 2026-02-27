@@ -1,6 +1,6 @@
 const componentCache = new Map<string, Node>();
 
-export function getComponentCache() {
+export function _inner_getComponentCache() {
     if (typeof componentCache !== 'undefined') {
         return componentCache;
     }
@@ -15,9 +15,9 @@ export function getComponentCache() {
     return (window as any).componentCache;
 }
 
-export function renderComponent(key: string, parentId: string): void {
+export function _inner_renderComponent(key: string, parentId: string): void {
     const parent = document.getElementById(parentId);
-    const cache = getComponentCache();
+    const cache = _inner_getComponentCache();
     if (!cache.has(key)) {
         const componentFn = (window as any).components?.[key];
         cache.set(key, componentFn());
@@ -28,13 +28,13 @@ export function renderComponent(key: string, parentId: string): void {
     parent!.appendChild(newElement);
 }
 
-export function removeComponent(id: string): void {
+export function _inner_removeComponent(id: string): void {
     const el = document.getElementById(id);
     el!.remove();
 }
 
 export const runtimeFunctions = [
-    { name: "renderComponent", fn: renderComponent },
-    { name: "removeComponent", fn: removeComponent },
-    { name: "getComponentCache", fn: getComponentCache },
+    { name: "_inner_renderComponent", fn: _inner_renderComponent },
+    { name: "_inner_removeComponent", fn: _inner_removeComponent },
+    { name: "_inner_getComponentCache", fn: _inner_getComponentCache },
 ];

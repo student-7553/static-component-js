@@ -54,7 +54,7 @@ export function compileToDomCommands(element: Element, varPrefix: string = "el")
         if (onClick) {
             let handlerStr = "";
             if (onClick.event === "render") {
-                handlerStr = `window.renderComponent('${onClick.component}', '${onClick.data.target}')`;
+                handlerStr = `window._inner_renderComponent('${onClick.component}', '${onClick.data.target}')`;
             } else if (onClick.event === "function") {
                 const args = Object.values(onClick.data).map(v => JSON.stringify(v)).join(", ");
                 handlerStr = `${onClick.name}(${args})`;

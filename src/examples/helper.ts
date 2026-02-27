@@ -19,6 +19,17 @@ export function setValue(key: string, value: string) {
     }
     (window as any).kv[key] = value;
 }
-function myCustomFunction() {
-    console.log("myCustomFunction is called..");
+
+export function removeComponentHelper(parentId: string) {
+    const parentElement = document.getElementById(parentId);
+
+    if (!parentElement) {
+        return;
+
+    }
+    const childElements = Array.from(parentElement.children);
+    for (let counter = 0; counter <= childElements.length; counter++) {
+        childElements[counter]?.remove();
+    }
+
 }

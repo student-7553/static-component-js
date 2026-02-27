@@ -2,6 +2,10 @@ const result = {
     ".card1": {
         "color": "red",
         "font-size": "20px",
+        ".card2": {
+            "color": "green",
+            "font-size": "20px",
+        },
     },
     ".card2": {
         "color": "green",

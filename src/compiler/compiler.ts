@@ -14,7 +14,7 @@ import { runtimeFunctions } from "./html-runtime.js";
  * @param components - The components to compile. The first one is the root.
  * @param filePath   - Destination file path (e.g. "./output/index.html").
  */
-export async function compileComponentsToHtml(components: Component[], filePath: string, externalScriptUrls: string[] = [], cssBlock: string = "", domCommandFileNames: string[] = []): Promise<void> {
+export async function compileComponentsToHtml(components: Component[], filePath: string, externalScriptUrls: string[] = [], cssFileUrl: string = "", domCommandFileNames: string[] = []): Promise<void> {
     if (components.length === 0) {
         throw new Error("At least one component is required for compilation.");
     }
@@ -38,9 +38,7 @@ export async function compileComponentsToHtml(components: Component[], filePath:
             <meta charset="UTF-8" />
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
             <title>Compiled Component</title>
-            <style>
-        ${cssBlock}
-            </style>
+            ${cssFileUrl ? `<link rel="stylesheet" href="${cssFileUrl}">` : ""}
         </head>
         <body>
         ${bodyContent}
@@ -106,6 +104,30 @@ async function writeScriptBlock(externalScriptProcessing: Array<{ absPath: strin
     return externalScriptUrls;
 }
 
+function processStyleNode(parentSelector: string, rules: Record<string, unknown>): string {
+    let currentSelectorCss = "";
+    let nestedCss = "";
+    let hasProps = false;
+
+    currentSelectorCss += `${parentSelector} {\n`;
+    for (const [prop, val] of Object.entries(rules)) {
+        if (typeof val === "object" && val !== null && !Array.isArray(val)) {
+            let newSelector = prop.startsWith(":")
+                ? `${parentSelector}${prop}`
+                : prop.startsWith("&")
+                    ? prop.replace(/&/g, parentSelector)
+                    : `${parentSelector} ${prop}`;
+            nestedCss += processStyleNode(newSelector, val as Record<string, unknown>);
+        } else {
+            hasProps = true;
+            currentSelectorCss += `  ${prop}: ${val};\n`;
+        }
+    }
+    currentSelectorCss += "}\n";
+
+    return (hasProps ? currentSelectorCss : "") + nestedCss;
+}
+
 async function getCSSBlock(cssScriptProcessing: Array<{ absPath: string }>) {
     let allGeneratedCss = "";
     for (const { absPath } of cssScriptProcessing) {
@@ -121,11 +143,7 @@ async function getCSSBlock(cssScriptProcessing: Array<{ absPath: string }>) {
         const styleObj: Record<string, unknown> = typeof DefaultExport === "function" ? DefaultExport() : DefaultExport;
         if (styleObj !== null) {
             for (const [selector, rules] of Object.entries(styleObj)) {
-                allGeneratedCss += `${selector} {\n`;
-                for (const [prop, val] of Object.entries(rules as Record<string, string>)) {
-                    allGeneratedCss += `  ${prop}: ${val};\n`;
-                }
-                allGeneratedCss += "}\n";
+                allGeneratedCss += processStyleNode(selector, rules as Record<string, unknown>);
             }
         }
     }
@@ -285,9 +303,16 @@ for (const tsFile of allTsFiles) {
 const htmlOutPath = path.join(projectRoot, "output", "index.html");
 
 const allGeneratedCss = await getCSSBlock(cssScriptProcessing);
+let cssFileUrl = "";
+if (allGeneratedCss) {
+    const cssOutPath = path.join(projectRoot, "output", "styles.css");
+    fs.writeFileSync(cssOutPath, allGeneratedCss, "utf-8");
+    cssFileUrl = "./styles.css";
+}
+
 const externalScriptUrls = await writeScriptBlock(externalScriptProcessing);
 const domCommandUrls = await writeDomCommands(components, htmlOutPath);
 
 // ── Produce HTML ─────────────────────────────────────────────────────────────
-await compileComponentsToHtml(components, htmlOutPath, externalScriptUrls, allGeneratedCss, domCommandUrls);
+await compileComponentsToHtml(components, htmlOutPath, externalScriptUrls, cssFileUrl, domCommandUrls);
 

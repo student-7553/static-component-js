@@ -21,16 +21,9 @@ function Card({ title, body }: CardProps) {
 
 export default function App() {
   return (
-    <div id="tempoooooo" class="app">
+    <div class="app">
       <h1 >Hello from JSX Test!</h1>
       <p>This page was authored in JSX and compiled to static HTML.</p>
-
-      <Card
-        title="What is this?"
-        body="A zero-dependency JSX compiler built on top of Element + Component."
-      />
-
-      <Card2 />
 
       <button onClick={
         {
@@ -41,7 +34,17 @@ export default function App() {
           }
         }
       }
-      >Click me</button>
+      >Add component me</button>
+      <button onClick={
+        {
+          event: "function",
+          name: "removeComponentHelper",
+          data: {
+            parentId: "tempoooooo",
+          }
+        }
+      }
+      >Remove component</button>
 
       <button onClick={
         {
@@ -53,6 +56,10 @@ export default function App() {
           }
         }
       }>Call Custom Function</button>
+
+      <div id="tempoooooo" >
+
+      </div>
     </div >
   );
 }
