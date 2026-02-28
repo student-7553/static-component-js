@@ -51,7 +51,7 @@ export function h(
 
         // Wrap in a Component to preserve the component boundary
         // so the dom-compiler can emit window.components[name]() calls
-        return new Component(result, type.name, "");
+        return new Component(result, type.name);
     }
 
     // ── Intrinsic element ─────────────────────────────────────────────────────

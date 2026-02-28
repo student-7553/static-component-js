@@ -31,5 +31,8 @@ export function removeComponentHelper(parentId: string) {
     for (let counter = 0; counter <= childElements.length; counter++) {
         childElements[counter]?.remove();
     }
+}
 
+export function loadComponentHelper() {
+    (window as any)._inner_loadComponent("Simple");
 }

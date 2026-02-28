@@ -67,7 +67,8 @@ export function compileToDomCommands(element: Element, varPrefix: string = "el")
             if (child instanceof Component) {
                 // Render component child via its registered factory in window.components
                 const childVar = `${varPrefix}${++counter}`;
-                const componentKey = child.uniqueId;
+                const componentKey = child.key;
+
                 commands.push(`const ${childVar} = window.components['${componentKey}']();`);
                 commands.push(`${currentVar}.appendChild(${childVar});`);
                 continue;

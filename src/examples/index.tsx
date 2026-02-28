@@ -1,23 +1,4 @@
 import { h } from "../compiler/jsx-compile-time.js";
-import Card2 from "./Card2.js";
-
-
-interface CardProps {
-  title: string;
-  body: string;
-}
-
-function Card({ title, body }: CardProps) {
-  return (
-    <div class="card" style={{
-      color: "blue",
-      fontSize: "20px"
-    }}>
-      <h2>{title}</h2>
-      <p>{body}</p>
-    </div>
-  );
-}
 
 export default function App() {
   return (
@@ -45,6 +26,15 @@ export default function App() {
         }
       }
       >Remove component</button>
+
+      <button onClick={
+        {
+          event: "function",
+          name: "loadComponentHelper",
+          data: {}
+        }
+      }
+      >Load component</button>
 
       <button onClick={
         {
