@@ -13,7 +13,7 @@ export type OnClickObject =
     | {
         event: "function";
         name: string;
-        data: Record<string, any>;
+        data?: Record<string, any>;
     };
 
 export class Element {

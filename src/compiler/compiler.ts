@@ -28,7 +28,6 @@ export async function compileComponentsToHtml(components: Component[], filePath:
     const runtimeBody = runtimeFunctions
         .map(rf => rf.fn.toString())
         .join("");
-
     const runtimeScript = `<script>${runtimeBody}</script>`;
     const extraScripts = externalScriptUrls.map(url => `<script src="${url}"></script>`).join("");
 
@@ -76,9 +75,7 @@ function getParameterNames(fn: Function): string[] {
 
 
 async function writeScriptBlock(externalScriptProcessing: Array<{ absPath: string; relPath: string, load: boolean }>) {
-    let externalScriptUrls: string[] = [];
-
-    for (const { absPath, relPath, load } of externalScriptProcessing) {
+    for (const { absPath, relPath } of externalScriptProcessing) {
         if (!fs.existsSync(absPath)) {
             console.warn(`Compiled JS not found at: ${absPath}`);
             continue;
@@ -98,13 +95,7 @@ async function writeScriptBlock(externalScriptProcessing: Array<{ absPath: strin
 
         fs.writeFileSync(finalJsAbsPath, minifiedJs, "utf-8");
         console.log(`JS (minified) written to: ${finalJsAbsPath}`);
-
-        if (load) {
-            externalScriptUrls.push("./" + relPath);
-        }
     }
-
-    return externalScriptUrls;
 }
 
 function processStyleNode(parentSelector: string, rules: Record<string, unknown>): string {
@@ -134,9 +125,7 @@ function processStyleNode(parentSelector: string, rules: Record<string, unknown>
 async function getCSSBlock(cssScriptProcessing: Array<{ absPath: string, load: boolean }>) {
     let allGeneratedCss = "";
     for (const { absPath, load } of cssScriptProcessing) {
-        if (!load) continue;
-        if (!fs.existsSync(absPath)) {
-            console.warn(`Compiled JS not found for CSS script at: ${absPath}`);
+        if (!load) {
             continue;
         }
 
@@ -154,9 +143,7 @@ async function getCSSBlock(cssScriptProcessing: Array<{ absPath: string, load: b
     return allGeneratedCss;
 }
 
-async function writeDomCommands(components: Component[], filePath: string, loadFileKeys: Set<string>) {
-    let domCommandFileNames = [];
-    let index = 0;
+async function writeDomCommands(components: Component[], filePath: string) {
     for (const component of components) {
         const element = component.getRoot();
         const domCommands = compileToDomCommands(element);
@@ -171,13 +158,7 @@ async function writeDomCommands(components: Component[], filePath: string, loadF
         const domOutPath = path.join(path.dirname(filePath), fileName);
         fs.writeFileSync(domOutPath, minifiedDomJs, "utf-8");
 
-        if (loadFileKeys.has(component.key)) {
-            domCommandFileNames.push(fileName);
-        }
-        index++;
     }
-
-    return domCommandFileNames;
 }
 
 /**
@@ -368,9 +349,20 @@ if (allGeneratedCss) {
     cssFileUrl = "./styles.css";
 }
 
-const externalScriptUrls = await writeScriptBlock(externalScriptProcessing);
+await writeScriptBlock(externalScriptProcessing);
 
-const domCommandUrls = await writeDomCommands(components, htmlOutPath, loadFileKeys);
+let externalScriptUrls: string[] = [];
+for (const { relPath, load } of externalScriptProcessing) {
+    if (load) {
+        externalScriptUrls.push("./" + relPath);
+    }
+}
+
+await writeDomCommands(components, htmlOutPath);
+
+const domCommandUrls: string[] = Array.from(loadFileKeys).map((componentKey) => {
+    return `${componentKey}.js`;
+});
 
 // ── Produce HTML ─────────────────────────────────────────────────────────────
 await compileComponentsToHtml(components, htmlOutPath, externalScriptUrls, cssFileUrl, domCommandUrls);

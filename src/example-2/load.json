@@ -1,0 +1,15 @@
+{
+    "components": [
+        "index.tsx",
+        "Card1.tsx",
+        "Card2.tsx",
+        "testd"
+    ],
+    "ts": [
+        "helper.ts",
+        "index-scripts.ts"
+    ],
+    "css": [
+        "Card_CSS.ts"
+    ]
+}
