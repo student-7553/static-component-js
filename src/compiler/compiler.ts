@@ -218,21 +218,69 @@ function collectFilesRecursive(dir: string, extensions: string[]): string[] {
     return results;
 }
 
-const allTsxFiles = collectFilesRecursive(folderPath, [".tsx"]);
+function getFileLists(folderPath: string) {
+    let tsxFileList: string[] = [];
+    let externalTsFileList: string[] = [];
+    let cssTsFileList: string[] = [];
 
-const indexTsx = allTsxFiles.find(f => path.basename(f) === "index.tsx");
-if (!indexTsx) {
-    console.error(`index.tsx not found in folder: ${folderPath}`);
-    process.exit(1);
+    const loadJsonPath = path.join(folderPath, "load.json");
+
+    if (fs.existsSync(loadJsonPath)) {
+
+        console.log(`Using load.json for compilation configuration...`);
+        const loadConfig = JSON.parse(fs.readFileSync(loadJsonPath, "utf-8"));
+
+        const expandPaths = (items: string[], allowedExts: string[], excludeFn?: (f: string) => boolean) => {
+            let result: string[] = [];
+            for (const item of items) {
+                const fullPath = path.resolve(folderPath, item);
+                if (fs.existsSync(fullPath) && fs.statSync(fullPath).isDirectory()) {
+                    result.push(...collectFilesRecursive(fullPath, allowedExts));
+                } else {
+                    result.push(fullPath);
+                }
+            }
+            if (excludeFn) {
+                result = result.filter(f => !excludeFn(f));
+            }
+            return result;
+        };
+
+        if (loadConfig.components && Array.isArray(loadConfig.components)) {
+            tsxFileList = expandPaths(loadConfig.components, [".tsx"]);
+        }
+        if (loadConfig.ts && Array.isArray(loadConfig.ts)) {
+            externalTsFileList = expandPaths(loadConfig.ts, [".ts"], f => f.endsWith("_CSS.ts"));
+        }
+        if (loadConfig.css && Array.isArray(loadConfig.css)) {
+            cssTsFileList = expandPaths(loadConfig.css, ["_CSS.ts"]);
+        }
+        return { tsxFileList, externalTsFileList, cssTsFileList };
+    }
+
+    const allTsxFiles = collectFilesRecursive(folderPath, [".tsx"]);
+
+    const indexTsx = allTsxFiles.find(f => path.basename(f) === "index.tsx");
+    if (!indexTsx) {
+        console.error(`index.tsx not found in folder: ${folderPath}`);
+        process.exit(1);
+    }
+
+    const otherTsxFiles = allTsxFiles.filter(f => f !== indexTsx);
+
+    tsxFileList = [
+        indexTsx,
+        ...otherTsxFiles,
+    ];
+
+    const allTsFiles = collectFilesRecursive(folderPath, [".ts"]);
+    externalTsFileList = allTsFiles.filter(f => !f.endsWith("_CSS.ts"));
+    cssTsFileList = allTsFiles.filter(f => f.endsWith("_CSS.ts"));
+
+    return { tsxFileList, externalTsFileList, cssTsFileList };
 }
 
-const otherTsxFiles = allTsxFiles.filter(f => f !== indexTsx);
-
-const tsxFileList = [
-    indexTsx,
-    ...otherTsxFiles,
-];
-
+const { tsxFileList, externalTsFileList, cssTsFileList } = getFileLists(folderPath);
 
 const components: Component[] = [];
 /** Maps each TSX file's basename (without extension) to its default-export function. */
@@ -282,21 +330,21 @@ for (const tsxFile of tsxFileList) {
 
 }
 
-const allTsFiles = collectFilesRecursive(folderPath, [".ts"]);
 const externalScriptProcessing: Array<{ absPath: string; relPath: string }> = [];
 const cssScriptProcessing: Array<{ absPath: string }> = [];
 
-for (const tsFile of allTsFiles) {
-    const tsPath = tsFile;
-    const relativeTs = path.relative(srcDir, tsPath);
+for (const tsFile of externalTsFileList) {
+    const relativeTs = path.relative(srcDir, tsFile);
     const jsRelPath = relativeTs.replace(/\.ts$/, ".js");
     const jsAbsPath = path.join(projectRoot, "build", jsRelPath);
+    externalScriptProcessing.push({ absPath: jsAbsPath, relPath: jsRelPath });
+}
 
-    if (tsFile.endsWith("_CSS.ts")) {
-        cssScriptProcessing.push({ absPath: jsAbsPath });
-    } else {
-        externalScriptProcessing.push({ absPath: jsAbsPath, relPath: jsRelPath });
-    }
+for (const tsFile of cssTsFileList) {
+    const relativeTs = path.relative(srcDir, tsFile);
+    const jsRelPath = relativeTs.replace(/\.ts$/, ".js");
+    const jsAbsPath = path.join(projectRoot, "build", jsRelPath);
+    cssScriptProcessing.push({ absPath: jsAbsPath });
 }
 
 
@@ -311,6 +359,7 @@ if (allGeneratedCss) {
 }
 
 const externalScriptUrls = await writeScriptBlock(externalScriptProcessing);
+
 const domCommandUrls = await writeDomCommands(components, htmlOutPath);
 
 // ── Produce HTML ─────────────────────────────────────────────────────────────

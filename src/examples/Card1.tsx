@@ -12,12 +12,19 @@ function Card3_INNER() {
 }
 
 export default function Card1() {
+  let tempo = false;
   return (
     <div class="card1">
       <p> Card 1 </p>
       <Card2 />
       <Card3_INNER />
       <Card4 />
+      {
+        tempo && (
+          <div> tempo</div>
+        )
+
+      }
       <p>
         ----------------
       </p>
