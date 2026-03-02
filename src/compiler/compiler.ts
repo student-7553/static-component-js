@@ -28,7 +28,12 @@ export async function compileComponentsToHtml(components: Component[], filePath:
     const runtimeBody = runtimeFunctions
         .map(rf => rf.fn.toString())
         .join("");
-    const runtimeScript = `<script>${runtimeBody}</script>`;
+
+    const newRuntimeBody = runtimeFunctions
+        .map(rf => `window.inner.${rf.name} = ` + rf.fn.toString())
+        .join(";");
+
+    const runtimeScript = `<script> window.inner = {}; ${newRuntimeBody}</script>`;
     const extraScripts = externalScriptUrls.map(url => `<script src="${url}"></script>`).join("");
 
     const html = `<!DOCTYPE html>

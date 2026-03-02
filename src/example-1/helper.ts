@@ -1,4 +1,4 @@
-export function getValue(key: string) {
+function getValue(key: string) {
     if (typeof window == 'undefined') {
         return null;
     }
@@ -10,7 +10,7 @@ export function getValue(key: string) {
 }
 
 
-export function setValue(key: string, value: string) {
+function setValue(key: string, value: string) {
     if (typeof window == 'undefined') {
         return;
     }
@@ -21,10 +21,10 @@ export function setValue(key: string, value: string) {
 }
 
 
-export function removeComponentHelper({ parentId }: { parentId: string }) {
+function removeComponentHelper(parentId: string) {
     const parentElement = document.getElementById(parentId);
-
     if (!parentElement) {
+        console.error(parentId + " element not found");
         return;
 
     }
@@ -34,6 +34,6 @@ export function removeComponentHelper({ parentId }: { parentId: string }) {
     }
 }
 
-export function loadComponentHelper() {
-    (window as any)._inner_loadComponent("Simple");
+function loadComponentHelper() {
+    (window as any).inner._inner_loadComponent("Simple");
 }

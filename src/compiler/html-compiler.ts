@@ -24,7 +24,7 @@ export function toHtmlString(element: Element): string {
     if (onClick) {
         let handlerStr = "";
         if (onClick.event === "render") {
-            handlerStr = `window._inner_renderComponent('${onClick.component}', '${onClick.target}')`;
+            handlerStr = `window.inner._inner_renderComponent('${onClick.component}', '${onClick.target}')`;
         } else if (onClick.event === "function") {
             const args = onClick.data?.map(t => {
                 return t.startsWith("$") ? `'" + ${t.substring(1)} + "'` : `'${t}'`;

@@ -1,0 +1,9 @@
+{
+    "components": [
+        "index.tsx"
+    ],
+    "ts": [
+        "helper-5.ts"
+    ],
+    "css": []
+}
