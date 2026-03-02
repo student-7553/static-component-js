@@ -99,7 +99,7 @@ export function h(
         if (child instanceof Element || child instanceof Component) {
             el.addChild(child);
         } else if (child != null && child !== true && child !== false) {
-            el.setText(String(child));
+            el.addText(String(child));
         }
     }
 

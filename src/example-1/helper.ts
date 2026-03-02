@@ -20,7 +20,8 @@ export function setValue(key: string, value: string) {
     (window as any).kv[key] = value;
 }
 
-export function removeComponentHelper(parentId: string) {
+
+export function removeComponentHelper({ parentId }: { parentId: string }) {
     const parentElement = document.getElementById(parentId);
 
     if (!parentElement) {

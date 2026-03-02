@@ -44,9 +44,11 @@ export function compileToDomCommands(element: Element, varPrefix: string = "el")
 
         // Set text content
         const textContent = el.getTextContent();
-        if (textContent !== null) {
-            const val = textContent.startsWith("$") ? textContent.substring(1) : JSON.stringify(textContent);
-            commands.push(`${currentVar}.textContent = ${val};`);
+        if (textContent.length > 0) {
+            const expressions = textContent.map(t => {
+                return t.startsWith("$") ? t.substring(1) : JSON.stringify(t);
+            });
+            commands.push(`${currentVar}.textContent = ${expressions.join(" + ")};`);
         }
 
         // Set click handler

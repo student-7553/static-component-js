@@ -20,7 +20,7 @@ export class Element {
     private tagName: string;
     private attributes: Map<string, string> = new Map();
     private children: (Element | Component)[] = [];
-    private textContent: string | null = null;
+    private textContents: string[] = [];
 
     /** Stable, unique CSS class name used to wire up event handlers at compile time. */
     private readonly uniqueClassName: string;
@@ -45,8 +45,8 @@ export class Element {
         return this.attributes;
     }
 
-    public getTextContent(): string | null {
-        return this.textContent;
+    public getTextContent(): string[] {
+        return this.textContents;
     }
 
     public setOnClick(callback: OnClickObject): void {
@@ -61,8 +61,8 @@ export class Element {
         this.children.push(child);
     }
 
-    public setText(text: string): void {
-        this.textContent = text;
+    public addText(text: string): void {
+        this.textContents.push(text);
     }
 
     public setAttribute(name: string, value: string): void {

@@ -14,7 +14,16 @@ function getInputElement() {
 
 export function addTask() {
     const inputElement = getInputElement();
-    console.log(inputElement.value);
-
+    (window as any)._inner_renderComponent("Task", "taskList", inputElement.value);
     inputElement.value = "";
+}
+
+export function deleteTask(taskName: string) {
+    // const inputElement = getInputElement();
+    const chosenElement = document.getElementById(taskName);
+    if (!chosenElement) {
+        console.error("Test are we called...");
+    }
+    // (window as any)._inner_renderComponent("Task", "taskList", inputElement.value);
+    // inputElement.value = "";
 }

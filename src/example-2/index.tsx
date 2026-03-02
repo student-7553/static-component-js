@@ -14,6 +14,7 @@ export default function App() {
         }
       }
       >Add component me</button>
+      <div id="taskList"></div>
 
     </div >
   );

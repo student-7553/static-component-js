@@ -26,7 +26,7 @@ export function toHtmlString(element: Element): string {
         if (onClick.event === "render") {
             handlerStr = `window._inner_renderComponent('${onClick.component}', '${onClick.data.target}')`;
         } else if (onClick.event === "function") {
-            const args = onClick.data ? Object.values(onClick.data).map(v => JSON.stringify(v)).join(", ") : null;
+            const args = onClick.data ? JSON.stringify(onClick.data) : null;
             handlerStr = `${onClick.name}(${args ? args : ""})`;
         }
         mergedAttrs.set("onclick", handlerStr);
@@ -47,8 +47,9 @@ export function toHtmlString(element: Element): string {
         return `${openTag}\n${childLines}\n${closeTag}`;
     }
 
-    if (textContent !== null) {
-        return `${openTag}${escapeHtml(textContent)}${closeTag}`;
+    if (textContent.length > 0) {
+        const text = textContent.map(t => escapeHtml(t)).join("");
+        return `${openTag}${text}${closeTag}`;
     }
 
     return `${openTag}${closeTag}`;

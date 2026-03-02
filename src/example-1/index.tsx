@@ -11,7 +11,7 @@ export default function App() {
           event: "render",
           component: "Card1",
           data: {
-            target: "tempoooooo"
+            target: "cardContainer"
           }
         }
       }
@@ -21,7 +21,7 @@ export default function App() {
           event: "function",
           name: "removeComponentHelper",
           data: {
-            parentId: "tempoooooo",
+            parentId: "cardContainer",
           }
         }
       }
@@ -31,23 +31,11 @@ export default function App() {
         {
           event: "function",
           name: "loadComponentHelper",
-          data: {}
         }
       }
       >Load component</button>
 
-      <button onClick={
-        {
-          event: "function",
-          name: "myCustomFunction",
-          data: {
-            msg: "Hello from JSX!",
-            count: 42
-          }
-        }
-      }>Call Custom Function</button>
-
-      <div id="tempoooooo" >
+      <div id="cardContainer" >
 
       </div>
     </div >
