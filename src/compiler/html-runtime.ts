@@ -1,5 +1,5 @@
 
-export function _inner_renderComponent(key: string, parentId: string, data?: any): void {
+export function _inner_renderComponent(key: string, parentId: string, data?: any[]): void {
     const parent = document.getElementById(parentId);
 
     const componentFn = (window as any).components?.[key];
@@ -7,8 +7,12 @@ export function _inner_renderComponent(key: string, parentId: string, data?: any
         console.error(`Component function not found for key: ${key}. Is it loaded?`);
         return;
     }
-
-    const newElement = componentFn(data);
+    let newElement;
+    if (data) {
+        newElement = componentFn(...data);
+    } else {
+        newElement = componentFn();
+    }
 
     parent!.appendChild(newElement);
 }

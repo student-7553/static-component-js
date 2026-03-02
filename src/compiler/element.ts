@@ -6,14 +6,12 @@ export type OnClickObject =
     | {
         event: "render";
         component: string;
-        data: {
-            target: string;
-        };
+        target: string;
     }
     | {
         event: "function";
         name: string;
-        data?: Record<string, any>;
+        data?: string[];
     };
 
 export class Element {

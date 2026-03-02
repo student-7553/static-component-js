@@ -12,18 +12,20 @@ function getInputElement() {
     return inputElement;
 }
 
+let counter = 0;
+
 export function addTask() {
     const inputElement = getInputElement();
-    (window as any)._inner_renderComponent("Task", "taskList", inputElement.value);
+    (window as any)._inner_renderComponent("Task", "taskList", [counter, inputElement.value]);
     inputElement.value = "";
+    counter++;
 }
 
-export function deleteTask(taskName: string) {
-    // const inputElement = getInputElement();
-    const chosenElement = document.getElementById(taskName);
+export function deleteTask(id: string) {
+    const chosenElement: HTMLElement | null = document.getElementById(id);
     if (!chosenElement) {
-        console.error("Test are we called...");
+        console.error("Element not found");
+        return;
     }
-    // (window as any)._inner_renderComponent("Task", "taskList", inputElement.value);
-    // inputElement.value = "";
+    chosenElement.remove()
 }

@@ -10,9 +10,7 @@ export default function App() {
         {
           event: "render",
           component: "Card1",
-          data: {
-            target: "cardContainer"
-          }
+          target: "cardContainer"
         }
       }
       >Add component me</button>
@@ -20,9 +18,7 @@ export default function App() {
         {
           event: "function",
           name: "removeComponentHelper",
-          data: {
-            parentId: "cardContainer",
-          }
+          data: ["cardContainer"],
         }
       }
       >Remove component</button>

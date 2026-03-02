@@ -56,12 +56,14 @@ export function compileToDomCommands(element: Element, varPrefix: string = "el")
         if (onClick) {
             let handlerStr = "";
             if (onClick.event === "render") {
-                handlerStr = `window._inner_renderComponent('${onClick.component}', '${onClick.data.target}')`;
+                handlerStr = `window._inner_renderComponent('${onClick.component}', '${onClick.target}')`;
             } else if (onClick.event === "function") {
-                const args = onClick.data ? Object.values(onClick.data).map(v => JSON.stringify(v)).join(", ") : null;
-                handlerStr = `${onClick.name}(${args ? args : ""})`;
+                const args = onClick.data?.map(t => {
+                    return t.startsWith("$") ? `'" + ${t.substring(1)} + "'` : `'${t}'`;
+                });
+                handlerStr = `"${onClick.name}(${args ? args.join(", ") : ""})"`;
             }
-            commands.push(`${currentVar}.setAttribute("onclick", ${JSON.stringify(handlerStr)});`);
+            commands.push(`${currentVar}.setAttribute("onclick", ${handlerStr});`);
         }
 
         // Add children
