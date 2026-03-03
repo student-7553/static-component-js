@@ -35,5 +35,5 @@ function removeComponentHelper(parentId: string) {
 }
 
 function loadComponentHelper() {
-    (window as any).inner._inner_loadComponent("Simple");
+    (window as any).inner.loadComponent("Simple");
 }

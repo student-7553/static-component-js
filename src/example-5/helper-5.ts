@@ -39,49 +39,41 @@ interface JobItem {
     type: string;
 }
 
-function renderJobCard(job: JobItem): HTMLElement {
-    const card = document.createElement("div");
-    card.className = "job-card";
-
-    const titleEl = document.createElement("div");
-    titleEl.className = "job-title";
-
-    if (job.url) {
-        const link = document.createElement("a");
-        link.href = job.url;
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
-        link.textContent = job.title;
-        titleEl.appendChild(link);
-    } else {
-        titleEl.textContent = job.title;
-    }
-
-    card.appendChild(titleEl);
-
-    const meta = document.createElement("div");
-    meta.className = "job-meta";
-
-    if (job.by) {
-        const author = document.createElement("span");
-        author.className = "job-author";
-        author.textContent = `by ${job.by}`;
-        meta.appendChild(author);
-    }
-
-    if (job.time) {
-        const timeEl = document.createElement("span");
-        timeEl.className = "job-time";
-        timeEl.textContent = formatTimestamp(job.time);
-        meta.appendChild(timeEl);
-    }
-
-    if (meta.hasChildNodes()) {
-        card.appendChild(meta);
-    }
-
-    return card;
-}
+// function renderJobCard(job: JobItem): HTMLElement {
+//     const card = document.createElement("div");
+//     card.className = "job-card";
+//     const titleEl = document.createElement("div");
+//     titleEl.className = "job-title";
+//     if (job.url) {
+//         const link = document.createElement("a");
+//         link.href = job.url;
+//         link.target = "_blank";
+//         link.rel = "noopener noreferrer";
+//         link.textContent = job.title;
+//         titleEl.appendChild(link);
+//     } else {
+//         titleEl.textContent = job.title;
+//     }
+//     card.appendChild(titleEl);
+//     const meta = document.createElement("div");
+//     meta.className = "job-meta";
+//     if (job.by) {
+//         const author = document.createElement("span");
+//         author.className = "job-author";
+//         author.textContent = `by ${job.by}`;
+//         meta.appendChild(author);
+//     }
+//     if (job.time) {
+//         const timeEl = document.createElement("span");
+//         timeEl.className = "job-time";
+//         timeEl.textContent = formatTimestamp(job.time);
+//         meta.appendChild(timeEl);
+//     }
+//     if (meta.hasChildNodes()) {
+//         card.appendChild(meta);
+//     }
+//     return card;
+// }
 
 function updateLoadMoreButton(): void {
     const btn = document.getElementById("loadMoreBtn") as HTMLButtonElement | null;
@@ -95,15 +87,14 @@ function updateLoadMoreButton(): void {
 }
 
 async function loadEntries(page: number): Promise<void> {
-    await loadPromise;
 
     const container = document.getElementById("jobBoardContainer");
     if (!container) return;
 
     // Fetch job IDs on first load
     if (allJobIds.length === 0) {
-        const res = await fetch("https://hacker-news.firebaseio.com/v0/jobstories.json");
-        allJobIds = await res.json() as number[];
+        const res = await Promise.all([fetch("https://hacker-news.firebaseio.com/v0/jobstories.json"), loadPromise]);
+        allJobIds = await res[0].json() as number[];
     }
 
     const start = page * PAGE_SIZE;
@@ -117,10 +108,24 @@ async function loadEntries(page: number): Promise<void> {
             return res.json() as Promise<JobItem>;
         })
     );
+    const containerElement = document.getElementById("jobBoardContainer");
+    if (!containerElement) {
+        throw "containerElement missing";
+    }
 
     for (const job of jobs) {
         if (job && job.title) {
-            container.appendChild(renderJobCard(job));
+            const newElement = window.inner.createComponent("Entry", [job.id, job.title, job.type, job.by]);
+            if (job.time) {
+                const formattedTime = formatTimestamp(job.time);
+                const linkElement = window.inner.createComponent("EntryTime", [formattedTime]);
+                newElement.append(linkElement);
+            }
+            if (job.url) {
+                const linkElement = window.inner.createComponent("EntryLink", [job.url]);
+                newElement.append(linkElement);
+            }
+            containerElement.append(newElement);
         }
     }
 

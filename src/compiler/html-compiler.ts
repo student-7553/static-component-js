@@ -8,23 +8,17 @@ import { Component } from "./component.js";
  */
 export function toHtmlString(element: Element): string {
     const attributes = element.getAttributes();
-    const uniqueClassName = element.getUniqueClassName();
     const tagName = element.getTagName();
     const children = element.getChildren();
     const textContent = element.getTextContent();
 
-    const existingClass = attributes.get("class");
-    const classValue = existingClass
-        ? `${uniqueClassName} ${existingClass}`
-        : uniqueClassName;
     const mergedAttrs = new Map(attributes);
-    mergedAttrs.set("class", classValue);
 
     const onClick = element.getOnClickHandler();
     if (onClick) {
         let handlerStr = "";
         if (onClick.event === "render") {
-            handlerStr = `window.inner._inner_renderComponent('${onClick.component}', '${onClick.target}')`;
+            handlerStr = `window.inner.renderComponent('${onClick.component}', '${onClick.target}')`;
         } else if (onClick.event === "function") {
             const args = onClick.data?.map(t => {
                 return t.startsWith("$") ? `'" + ${t.substring(1)} + "'` : `'${t}'`;

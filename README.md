@@ -11,7 +11,7 @@ Traditional frontend frameworks (like React) rely on a Virtual DOM (VDOM) and a 
 
 ## Project Structure
 
-- `src/compiler/`: Framework core and component authoring.
+- `src/compiler/`: Framework core.
   - `jsx-runtime.ts`: The JSX transform factory.
   - `jsx-compiler.ts`: CLI tool to compile your JSX/TSX site.
   - `compiler.ts`: The build engine that orchestrates HTML and JS generation.
@@ -19,7 +19,6 @@ Traditional frontend frameworks (like React) rely on a Virtual DOM (VDOM) and a 
   - `html-compiler.ts`: Generates SEO-friendly static HTML.
 - `output/`: The fully formed, deployment-ready website.
   - `index.html`: Optimized static entry point.
-  - `app.js`: High-performance interactive logic.
 
 ## Getting Started
 
@@ -35,11 +34,73 @@ tsc && node build/compiler/compiler.js {path-to-root-component-folder}
 ```
 
 ### 3. Deploy
-Simply serve the `output/` directory. Your site is ready for the world.
+Simply serve the `output/` directory.
 
-## How it Works: The Hybrid Approach
+## How it Works:
 
 1. **Build Time**: The compiler analyzes your JSX tree and produces two outputs:
    - A static HTML representation for instant first paint.
    - A set of imperative JavaScript commands that mirror the tree structure.
 2. **Runtime**: Instead of "hydrating" a VDOM, the framework uses the pre-compiled commands to directly update the real DOM. This "reconstruction" and "update" approach is fundamentally faster than traditional hydration for static-oriented sites.
+
+## Specifically:
+
+When you build your application using our compiler, we look at your components and generate imperative JavaScript functions that build the DOM node-by-node.
+
+For example, a component like this:
+
+```tsx
+export default function Entry(
+  id: number,
+  title: string,
+  type: string,
+) {
+  return (
+    <div style={{ display: "flex", gap: "10px" }}>
+      <p>{id}</p>
+      <p>{title}</p>
+      <p>{type}</p>
+    </div>
+  );
+}
+```
+
+Is compiled into a highly-efficient DOM construction function:
+
+```javascript
+window.components['Entry'] = function($id, $title, $type) {
+  const el1 = document.createElement("div");
+  el1.style.cssText = "display:flex;gap:10px";
+  
+  const el2 = document.createElement("p");
+  el2.textContent = id;
+  el1.appendChild(el2);
+  
+  const el3 = document.createElement("p");
+  el3.textContent = title;
+  el1.appendChild(el3);
+  
+  const el4 = document.createElement("p");
+  el4.textContent = type;
+  el1.appendChild(el4);
+  
+  return el1;
+};
+```
+
+You can then mount these components at runtime using the included runtime helpers:
+
+```javascript
+// Creates the element and appends it to a parent container
+window.inner.renderComponent("Entry", "containerId", [123, "My Post", "story"]);
+
+// Or just create the DOM node and handle it yourself
+const newElement = window.inner.createComponent("Entry", [123, "My Post", "story"]);
+containerElement.append(newElement);
+```
+
+## Trade offs:
+
+While **static-component-js** offers unparalleled speed and zero hydration overhead, it makes a specific set of trade-offs:
+
+1. **Manual State Management**: Unlike React, there is no built-in reactivity system. If your data changes, the framework will not automatically figure out what parts of the DOM need to change. You must manually update these elements, or completely re-render them.

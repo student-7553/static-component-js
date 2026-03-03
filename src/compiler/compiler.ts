@@ -8,12 +8,27 @@ import { toHtmlString } from "./html-compiler.js";
 import { compileToDomCommands } from "./dom-compiler.js";
 import { runtimeFunctions } from "./html-runtime.js";
 
+
+
 /**
- * Compiles an array of components into a full HTML file and writes it to disk.
+ * CLI entry-point: compiles one or more JSX/TSX components to HTML + JS output.
  *
- * @param components - The components to compile. The first one is the root.
- * @param filePath   - Destination file path (e.g. "./output/index.html").
+ * All source files must be compiled with `npx tsc` first.
+ * The first file is the "root" component (used for static HTML).
+ * All files have their DOM commands added to index.html.
+ *
+ * Usage:
+ *   node build/jsx-compiler.js <path-to-root.tsx> [other-components.tsx...]
+ *
+ * Example:
+ *   node build/jsx-compiler.js src/examples/App.tsx src/examples/Counter.tsx
+ *
+ * Outputs:
+ *   build/index.html  – Full compiled HTML page
+ *   build/app.js      – Copy of the first compiled JS module
  */
+
+
 export async function compileComponentsToHtml(components: Component[], filePath: string, externalScriptUrls: string[] = [], cssFileUrl: string = "", domCommandFileNames: string[] = []): Promise<void> {
     if (components.length === 0) {
         throw new Error("At least one component is required for compilation.");
@@ -24,10 +39,6 @@ export async function compileComponentsToHtml(components: Component[], filePath:
     const bodyContent = toHtmlString(rootElement);
 
     const domScriptBlock = domCommandFileNames.map(fileName => `<script async src="./${fileName}"></script>`).join("");
-
-    const runtimeBody = runtimeFunctions
-        .map(rf => rf.fn.toString())
-        .join("");
 
     const newRuntimeBody = runtimeFunctions
         .map(rf => `window.inner.${rf.name} = ` + rf.fn.toString())
@@ -166,23 +177,6 @@ async function writeDomCommands(components: Component[], filePath: string) {
     }
 }
 
-/**
- * CLI entry-point: compiles one or more JSX/TSX components to HTML + JS output.
- *
- * All source files must be compiled with `npx tsc` first.
- * The first file is the "root" component (used for static HTML).
- * All files have their DOM commands added to index.html.
- *
- * Usage:
- *   node build/jsx-compiler.js <path-to-root.tsx> [other-components.tsx...]
- *
- * Example:
- *   node build/jsx-compiler.js src/examples/App.tsx src/examples/Counter.tsx
- *
- * Outputs:
- *   build/index.html  – Full compiled HTML page
- *   build/app.js      – Copy of the first compiled JS module
- */
 
 let sourceArgs = process.argv.slice(2);
 

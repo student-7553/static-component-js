@@ -22,16 +22,7 @@ export function compileToDomCommands(element: Element, varPrefix: string = "el")
         // Set attributes
         const attributes = el.getAttributes();
 
-        // Add unique class name
-        const uniqueClass = el.getUniqueClassName();
-        const existingClass = attributes.get("class");
-        const finalClass = existingClass ? `${uniqueClass} ${existingClass}` : uniqueClass;
-        commands.push(`${currentVar}.className = ${JSON.stringify(finalClass)};`);
-
         for (const [name, value] of attributes.entries()) {
-            if (name === "class") {
-                continue;
-            }
             if (name === "style") {
                 // Use cssText for inline styles – avoids setAttribute quirks on style
                 const val = value.startsWith("$") ? value.substring(1) : JSON.stringify(value);
@@ -56,7 +47,7 @@ export function compileToDomCommands(element: Element, varPrefix: string = "el")
         if (onClick) {
             let handlerStr = "";
             if (onClick.event === "render") {
-                handlerStr = `window.inner._inner_renderComponent('${onClick.component}', '${onClick.target}')`;
+                handlerStr = `window.inner.renderComponent('${onClick.component}', '${onClick.target}')`;
             } else if (onClick.event === "function") {
                 const args = onClick.data?.map(t => {
                     return t.startsWith("$") ? `'" + ${t.substring(1)} + "'` : `'${t}'`;

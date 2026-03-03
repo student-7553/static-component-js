@@ -16,7 +16,7 @@ let counter = 0;
 
 export function addTask() {
     const inputElement = getInputElement();
-    (window as any).inner._inner_renderComponent("Task", "taskList", [counter, inputElement.value]);
+    (window as any).inner.renderComponent("Task", "taskList", [counter, inputElement.value]);
     inputElement.value = "";
     counter++;
 }

@@ -37,3 +37,14 @@ declare namespace JSX {
         [tag: string]: IntrinsicElementProps;
     }
 }
+
+interface Inner {
+    renderComponent(key: string, parentId: string, data?: unknown[]): void;
+    createComponent(key: string, data?: unknown[]): HTMLElement;
+    loadComponent(componentKey: string): void;
+}
+
+interface Window {
+    inner: Inner;
+    components?: Record<string, (...args: unknown[]) => HTMLElement>;
+}

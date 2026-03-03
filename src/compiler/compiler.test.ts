@@ -75,13 +75,13 @@ describe("Element", () => {
 describe("toHtmlString", () => {
     it("renders an empty element", () => {
         const el = new Element("div");
-        expect(stripClass(toHtmlString(el))).toBe('<div class=""></div>');
+        expect(toHtmlString(el)).toBe('<div></div>');
     });
 
     it("renders a static text element", () => {
         const el = new Element("p");
         el.addText("Hello world");
-        expect(stripClass(toHtmlString(el))).toBe('<p class="">Hello world</p>');
+        expect(toHtmlString(el)).toBe('<p>Hello world</p>');
     });
 
     it("escapes HTML special chars in text", () => {
@@ -131,7 +131,7 @@ describe("toHtmlString", () => {
         const el = new Element("button");
         el.setOnClick({ event: "render", component: "Card", target: "container" });
         const html = toHtmlString(el);
-        expect(html).toContain("window.inner._inner_renderComponent('Card', 'container')");
+        expect(html).toContain("window.inner.renderComponent('Card', 'container')");
     });
 
     it("renders attributes on the element", () => {
@@ -143,11 +143,12 @@ describe("toHtmlString", () => {
         expect(html).toContain('id="my-input"');
     });
 
-    it("merges an existing class attribute with the unique class", () => {
+    it("preserves user-defined class attribute", () => {
         const el = new Element("div");
         el.setAttribute("class", "my-class");
         const html = toHtmlString(el);
-        expect(html).toMatch(/class="sc-el-\d+ my-class"/);
+        expect(html).toContain('class="my-class"');
+        expect(html).not.toMatch(/sc-el-\d+/);
     });
 });
 
@@ -217,7 +218,7 @@ describe("compileToDomCommands", () => {
         const el = new Element("button");
         el.setOnClick({ event: "render", component: "Card", target: "container" });
         const cmds = compileToDomCommands(el);
-        expect(cmds).toContain("window.inner._inner_renderComponent('Card', 'container')");
+        expect(cmds).toContain("window.inner.renderComponent('Card', 'container')");
     });
 
     it("appends child elements", () => {

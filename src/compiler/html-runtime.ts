@@ -1,11 +1,10 @@
 
-export function _inner_renderComponent(key: string, parentId: string, data?: any[]): void {
+function renderComponent(key: string, parentId: string, data?: string[]): void {
     const parent = document.getElementById(parentId);
 
-    const componentFn = (window as any).components?.[key];
+    const componentFn = window.components?.[key];
     if (!componentFn) {
-        console.error(`Component function not found for key: ${key}. Is it loaded?`);
-        return;
+        throw `Component function not found for key: ${key}. Is it loaded?`;
     }
     let newElement;
     if (data) {
@@ -17,12 +16,26 @@ export function _inner_renderComponent(key: string, parentId: string, data?: any
     parent!.appendChild(newElement);
 }
 
+function createComponent(key: string, data?: string[]): HTMLElement {
+    const componentFn = window.components?.[key];
+    if (!componentFn) {
+        throw `Component function not found for key: ${key}. Is it loaded?`;
+    }
+    let newElement;
+    if (data) {
+        newElement = componentFn(...data);
+    } else {
+        newElement = componentFn();
+    }
+    return newElement;
+}
 
-export function _inner_loadComponent(componentKey: string): void {
+
+function loadComponent(componentKey: string): void {
     if (typeof window === 'undefined') return;
 
     // If the component function is already available, no need to load the script
-    if ((window as any).components?.[componentKey]) return;
+    if (window.components?.[componentKey]) return;
 
     // Avoid duplicate script tags
     const scriptSrc = `./${componentKey}.js`;
@@ -33,6 +46,7 @@ export function _inner_loadComponent(componentKey: string): void {
 }
 
 export const runtimeFunctions = [
-    { name: "_inner_renderComponent", fn: _inner_renderComponent },
-    { name: "_inner_loadComponent", fn: _inner_loadComponent },
+    { name: "renderComponent", fn: renderComponent },
+    { name: "loadComponent", fn: loadComponent },
+    { name: "createComponent", fn: createComponent },
 ];

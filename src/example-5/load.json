@@ -1,6 +1,9 @@
 {
     "components": [
-        "index.tsx"
+        "index.tsx",
+        "Entry.tsx",
+        "EntryLink.tsx",
+        "EntryTime.tsx"
     ],
     "ts": [
         "helper-5.ts"
