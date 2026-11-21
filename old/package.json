@@ -1,0 +1,36 @@
+{
+  "name": "static-component",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Frontend js library",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "build": "tsc",
+    "clean": "rm -rf output/*",
+    "compile:example-1": "npm run clean && tsc && node build/compiler/compiler.js src/example-1/",
+    "compile:example-2": "npm run clean && tsc && node build/compiler/compiler.js src/example-2/",
+    "compile:example-3": "npm run clean && tsc && node build/compiler/compiler.js src/example-3/",
+    "compile:example-4": "npm run clean && tsc && node build/compiler/compiler.js src/example-4/",
+    "compile:example-5": "npm run clean && tsc && node build/compiler/compiler.js src/example-5/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/student-7553/static-component-js.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/student-7553/static-component-js/issues"
+  },
+  "homepage": "https://github.com/student-7553/static-component-js#readme",
+  "devDependencies": {
+    "@types/html-minifier-terser": "^7.0.2",
+    "@types/node": "^25.3.0",
+    "html-minifier-terser": "^7.2.0",
+    "terser": "^5.46.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  }
+}
